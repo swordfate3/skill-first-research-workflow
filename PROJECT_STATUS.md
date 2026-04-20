@@ -10,7 +10,7 @@ Core idea:
 
 ```text
 LLM/Agent does the research thinking
-Skill defines the workflow
+Skill runs the workflow automatically after invocation
 Plain files keep state and outputs
 Web page displays generated documents
 ```
@@ -37,6 +37,8 @@ workspace/extracted/<paper-name>/
 - Updated the skill so Agents must analyze PDF table evidence, key formulas, figure notes, and extraction uncertainty.
 - Added tests for state tracking and PDF extraction behavior.
 - Added `uv` project configuration with `pyproject.toml` and `.python-version`.
+- Added `workflow.py prepare` so the skill has one automatic entry point.
+- Simplified `SKILL.md`: user adds papers and invokes the skill; the Agent runs the rest.
 
 ## Verified
 
@@ -45,31 +47,29 @@ Run from the project root:
 ```bash
 uv sync
 uv run python -m unittest discover -s tests -v
-uv run python -m py_compile extract_pdfs.py state.py server.py
-uv run python extract_pdfs.py
+uv run python -m py_compile extract_pdfs.py state.py server.py workflow.py
+uv run python workflow.py prepare
 ```
 
-Current verification result after uv update:
+Current verification result:
 
 ```text
-5 unittest tests passed.
+7 unittest tests passed.
 Python files compiled successfully.
-PDF extractor CLI extracted 2 PDFs on the first uv run; later uv runs skipped them because their hashes were unchanged.
+workflow.py prepare scans papers, extracts/skips PDFs, keeps uncarded papers in the work queue, and returns next Agent actions.
 ```
 
 ## Next Steps
 
-1. Try the full flow with 2 real PDF papers in `workspace/papers/`.
+1. Invoke the skill on the current real PDFs and inspect generated paper cards.
 2. Improve table extraction if `tables.md` misses important experimental tables.
 3. Add web approval buttons for `pending`, `approved`, and `rejected` output documents.
-4. Add a simple document status editor for Markdown frontmatter.
-5. Decide whether to add OCR/MinerU/Marker as an optional advanced extraction path.
+4. Decide whether to add OCR/MinerU/Marker as an optional advanced extraction path.
 
 ## Useful Commands
 
 ```bash
-uv run python state.py scan
-uv run python extract_pdfs.py
+uv run python workflow.py prepare
 uv run python server.py
 uv run python -m unittest discover -s tests -v
 ```
