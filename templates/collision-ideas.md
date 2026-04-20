@@ -1,5 +1,5 @@
 ---
-title: Innovation Collision Ideas
+title: 创新碰撞想法
 type: collision
 status: pending
 source_papers:
@@ -7,36 +7,40 @@ source_papers:
   - paper-b.pdf
 ---
 
-# Innovation Collision Ideas
+# 创新碰撞想法
 
-## Candidate 1: Title
+## 候选方向 1：标题
 
-**Source papers:** paper A, paper B
+**来源论文：** paper A, paper B
 
-**Collision type:** problem + method
+**碰撞类型：** 问题 + 方法
 
-**Idea:** Describe the idea.
+**想法：** 用中文具体描述这个方向。
 
-**Why it might be novel:** Explain the gap.
+**可能新在哪里：** 说明两篇论文之间没有直接验证过的缺口。
 
-**Why it might fail:** Explain the risk.
+**为什么可能失败：** 说明风险和反例。
 
-**First experiment:** Describe the smallest useful test.
+**第一个实验：** 写最小可验证实验。
 
-**Score:** 0.80
+**分数：** 0.80
 
-## Candidate 2: Title
+## 候选方向 2：标题
 
-**Source papers:** paper A, paper C
+**来源论文：** paper A, paper C
 
-**Collision type:** limitation + tool
+**碰撞类型：** 局限 + 工具
 
-**Idea:** Describe the idea.
+**想法：** 用中文具体描述这个方向。
 
-**Why it might be novel:** Explain the gap.
+**可能新在哪里：** 说明潜在创新点。
 
-**Why it might fail:** Explain the risk.
+**为什么可能失败：** 说明风险。
 
-**First experiment:** Describe the smallest useful test.
+**第一个实验：** 写最小可验证实验。
 
-**Score:** 0.65
+**分数：** 0.65
+
+## 术语对照
+
+- English term: 中文术语

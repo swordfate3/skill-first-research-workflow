@@ -39,6 +39,7 @@ workspace/extracted/<paper-name>/
 - Added `uv` project configuration with `pyproject.toml` and `.python-version`.
 - Added `workflow.py prepare` so the skill has one automatic entry point.
 - Simplified `SKILL.md`: user adds papers and invokes the skill; the Agent runs the rest.
+- Added default Chinese output rules with English technical terms preserved.
 
 ## Verified
 

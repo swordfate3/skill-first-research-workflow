@@ -9,6 +9,20 @@ Run the workflow automatically. The user should only need to add papers to `work
 
 Do not ask the user to run setup commands unless a command fails or a PDF needs OCR/manual text.
 
+## Language
+
+默认使用中文写所有输出文档和最终回复。
+
+关键英文术语保留原文，第一次出现时写成：
+
+```text
+中文术语（English term）
+```
+
+Do not translate paper titles, method names, metric names, dataset names, model names, or cipher names when translation would make them harder to recognize.
+
+Every paper card and collision document should include a short `## 术语对照` section when the source paper is mainly English.
+
 ## Start Here
 
 Immediately run:
@@ -75,15 +89,16 @@ For each `papers_to_card` item, write:
 
 Include only useful, concrete information:
 
-- one-sentence summary
-- core problem
-- method
-- evidence, especially tables
-- key formulas
-- limitations
-- useful concepts
-- follow-up experiments
-- extraction uncertainty for PDFs
+- 一句话总结
+- 核心问题
+- 方法
+- 证据，尤其是表格证据
+- 关键公式
+- 局限性
+- 有用概念
+- 后续实验
+- PDF 提取不确定性
+- 术语对照
 
 After each paper card, immediately run:
 
@@ -101,20 +116,20 @@ For each `pending_collisions` pair, write:
 
 Look for:
 
-- problem from A + method from B
-- limitation from A + tool/formula/table evidence from B
-- shared gap
-- conflicting assumptions
-- cheap first experiment
+- A 的问题 + B 的方法
+- A 的局限 + B 的工具/公式/表格证据
+- 共同未解决缺口
+- 冲突假设
+- 便宜的第一个实验
 
 Each idea needs:
 
-- title
-- source papers
-- why it might be novel
-- why it might fail
-- first experiment
-- score from 0.0 to 1.0
+- 标题
+- 来源论文
+- 可能新在哪里
+- 为什么可能失败
+- 第一个实验
+- 0.0 到 1.0 分数
 
 After each collision document, immediately run:
 

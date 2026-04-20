@@ -9,32 +9,36 @@ source_papers:
 
 # Prototype Title
 
-## Research Question
+## 研究问题
 
-What exact question are we testing?
+我们要验证的具体问题是什么？
 
-## Hypothesis
+## 假设
 
-What do we expect to be true?
+我们预期什么成立？
 
-## Minimal Experiment
+## 最小实验
 
-What is the smallest experiment that can teach us something?
+最小但有信息量的实验是什么？
 
-## Required Data or Code
+## 需要的数据或代码
 
-- Requirement 1
-- Requirement 2
+- 需求 1
+- 需求 2
 
-## Evaluation Metric
+## 评价指标
 
-How do we know whether it worked?
+怎么判断实验是否有效？
 
-## Expected Result
+## 预期结果
 
-What result would support the hypothesis?
+什么结果支持假设？
 
-## Failure Modes
+## 失败模式
 
-- Failure mode 1
-- Failure mode 2
+- 失败模式 1
+- 失败模式 2
+
+## 术语对照
+
+- English term: 中文术语

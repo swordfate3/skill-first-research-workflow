@@ -9,31 +9,35 @@ source_papers:
 
 # Draft Title
 
-## Abstract
+## 摘要
 
-Short abstract.
+用中文写简短摘要，关键英文术语保留。
 
-## Motivation
+## 动机
 
-Why this direction matters.
+为什么这个方向值得做？
 
-## Related Observations
+## 相关观察
 
-What source papers show.
+来源论文提供了什么证据？
 
-## Proposed Method
+## 提出方法
 
-What we propose.
+我们提出什么方法？
 
-## Experiment Plan
+## 实验计划
 
-How to test it.
+如何验证？
 
-## Risks and Limitations
+## 风险和局限
 
-What may fail or remain unproven.
+什么可能失败或仍无法证明？
 
-## Next Actions
+## 下一步行动
 
-- Action 1
-- Action 2
+- 行动 1
+- 行动 2
+
+## 术语对照
+
+- English term: 中文术语

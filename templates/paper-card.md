@@ -8,68 +8,67 @@ source_papers:
 
 # Paper Card Title
 
-## One-Sentence Summary
+## 一句话总结
 
-Write one sentence.
+用一句中文说明这篇论文做了什么。
 
-## Core Problem
+## 核心问题
 
-What problem does the paper solve?
+这篇论文试图解决什么问题？
 
-## Method
+## 方法
 
-What method does it use?
+它用了什么方法？关键英文方法名保留原文。
 
-## Evidence
+## 证据
 
-- Result or claim 1
-- Result or claim 2
+- 结果或论据 1
+- 结果或论据 2
 
-## Evidence From Tables
+## 表格证据
 
-- Table:
-- Metric:
-- Baseline:
-- Improvement:
-- Caveat:
+- 表格：
+- 指标：
+- baseline：
+- 改进：
+- 注意事项：
 
-## Key Formulas
+## 关键公式
 
-- Formula or equation:
-- Meaning:
-- Assumption:
-- Why it matters:
+- 公式：
+- 含义：
+- 隐含假设：
+- 为什么重要：
 
-## Figure Notes
+## 图表说明
 
-- Figure:
-- What it explains:
-- What remains unclear:
+- 图：
+- 它解释了什么：
+- 仍不清楚的地方：
 
-## Limitations
+## 局限性
 
-- Limitation 1
-- Limitation 2
+- 局限 1
+- 局限 2
 
-## Useful Concepts
+## 有用概念
 
-- Concept 1
-- Concept 2
+- 概念 1（English term）
+- 概念 2（English term）
 
-## Open Questions
+## 后续实验
 
-- Question 1
-- Question 2
+- 实验 1
+- 实验 2
 
-## Follow-Up Experiments
+## 术语对照
 
-- Experiment 1
-- Experiment 2
+- English term: 中文术语
 
-## Extraction Uncertainty
+## 提取不确定性
 
-- Text extraction:
-- Table extraction:
-- Formula extraction:
-- Figures or diagrams:
-- Needs human review:
+- 正文提取：
+- 表格提取：
+- 公式提取：
+- 图像或图表：
+- 需要人工复核：
