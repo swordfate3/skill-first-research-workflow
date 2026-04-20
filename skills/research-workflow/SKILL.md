@@ -71,7 +71,7 @@ Use `status: pending` for outputs that need human review.
 Before reading papers, run:
 
 ```bash
-python state.py scan
+uv run python state.py scan
 ```
 
 This updates `workspace/state.json`.
@@ -90,7 +90,7 @@ Do not repeat collisions already recorded in `workspace/state.json`.
 Before analyzing PDF files, run:
 
 ```bash
-python extract_pdfs.py
+uv run python extract_pdfs.py
 ```
 
 This creates or refreshes `workspace/extracted/<paper-name>/` only when the PDF hash changed.
@@ -156,13 +156,13 @@ A paper card must include:
 After writing a paper card, mark it:
 
 ```bash
-python state.py mark-card <paper_path> <output_file>
+uv run python state.py mark-card <paper_path> <output_file>
 ```
 
 Example:
 
 ```bash
-python state.py mark-card paper-a.pdf 001-paper-card-paper-a.md
+uv run python state.py mark-card paper-a.pdf 001-paper-card-paper-a.md
 ```
 
 ### 5. Generate Innovation Collisions
@@ -194,13 +194,13 @@ Each candidate should include:
 After writing a collision document, mark the pair:
 
 ```bash
-python state.py mark-collision <paper_a> <paper_b> <output_file>
+uv run python state.py mark-collision <paper_a> <paper_b> <output_file>
 ```
 
 Example:
 
 ```bash
-python state.py mark-collision paper-a.pdf paper-b.pdf 002-collision-paper-a-paper-b.md
+uv run python state.py mark-collision paper-a.pdf paper-b.pdf 002-collision-paper-a-paper-b.md
 ```
 
 ### 6. Recommend Top Ideas

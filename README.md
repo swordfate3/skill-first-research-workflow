@@ -24,6 +24,7 @@ skill-first-research-workflow/
     approvals/                        # 可选审批记录
   templates/                          # 输出文档模板
   web/                                # 本地文档展示页面
+  pyproject.toml                      # uv Python 项目配置
   extract_pdfs.py                     # 轻量 PDF 结构提取
   state.py                            # 扫描新论文、记录已碰撞组合
   server.py                           # 本地 Web 服务
@@ -31,7 +32,15 @@ skill-first-research-workflow/
 
 ## 最快使用
 
-### 1. 放论文
+### 1. 准备环境
+
+这个项目用 `uv` 运行 Python。
+
+```bash
+uv sync
+```
+
+### 2. 放论文
 
 把 PDF、摘要、Markdown 笔记放进：
 
@@ -39,10 +48,10 @@ skill-first-research-workflow/
 workspace/papers/
 ```
 
-### 2. 扫描新论文
+### 3. 扫描新论文
 
 ```bash
-python state.py scan
+uv run python state.py scan
 ```
 
 它会更新：
@@ -58,12 +67,12 @@ workspace/state.json
 - 文件 hash 变了：重新生成 paper card。
 - 已经记录过的论文组合：不重复做 collision。
 
-### 3. 提取 PDF 内容
+### 4. 提取 PDF 内容
 
 如果有 PDF，先运行：
 
 ```bash
-python extract_pdfs.py
+uv run python extract_pdfs.py
 ```
 
 它会生成：
@@ -85,13 +94,13 @@ workspace/extracted/论文名/
 
 注意：这是轻量提取，不是假装完美理解 PDF。表格、公式、图像内容都可能需要人工复核。
 
-### 4. 让大模型执行 skill
+### 5. 让大模型执行 skill
 
 给 Claude Code 或 Codex 说：
 
 ```text
 请使用 skill-first-research-workflow/skills/research-workflow/SKILL.md，
-先运行 python state.py scan 和 python extract_pdfs.py，
+先运行 uv run python state.py scan 和 uv run python extract_pdfs.py，
 阅读 workspace/papers 与 workspace/extracted 下的材料，
 生成 paper card、创新碰撞和 draft，
 把结果写到 workspace/outputs。
@@ -109,21 +118,21 @@ workspace/outputs/004-draft.md
 Agent 写完 paper card 后，记录一下：
 
 ```bash
-python state.py mark-card paper-a.pdf 001-paper-card-paper-a.md
+uv run python state.py mark-card paper-a.pdf 001-paper-card-paper-a.md
 ```
 
 Agent 写完两篇论文的碰撞后，记录一下：
 
 ```bash
-python state.py mark-collision paper-a.pdf paper-b.pdf 002-collision-paper-a-paper-b.md
+uv run python state.py mark-collision paper-a.pdf paper-b.pdf 002-collision-paper-a-paper-b.md
 ```
 
-### 5. 打开网页看结果
+### 6. 打开网页看结果
 
 在这个目录下启动：
 
 ```bash
-python server.py
+uv run python server.py
 ```
 
 然后打开：

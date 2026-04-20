@@ -36,23 +36,25 @@ workspace/extracted/<paper-name>/
 
 - Updated the skill so Agents must analyze PDF table evidence, key formulas, figure notes, and extraction uncertainty.
 - Added tests for state tracking and PDF extraction behavior.
+- Added `uv` project configuration with `pyproject.toml` and `.python-version`.
 
 ## Verified
 
 Run from the project root:
 
 ```bash
-python -m unittest discover -s tests -v
-python -m py_compile extract_pdfs.py state.py server.py
-python extract_pdfs.py
+uv sync
+uv run python -m unittest discover -s tests -v
+uv run python -m py_compile extract_pdfs.py state.py server.py
+uv run python extract_pdfs.py
 ```
 
-Current verification result before migration:
+Current verification result after uv update:
 
 ```text
 5 unittest tests passed.
 Python files compiled successfully.
-PDF extractor CLI returned an empty summary when no PDFs were present.
+PDF extractor CLI extracted 2 PDFs on the first uv run; later uv runs skipped them because their hashes were unchanged.
 ```
 
 ## Next Steps
@@ -66,10 +68,10 @@ PDF extractor CLI returned an empty summary when no PDFs were present.
 ## Useful Commands
 
 ```bash
-python state.py scan
-python extract_pdfs.py
-python server.py
-python -m unittest discover -s tests -v
+uv run python state.py scan
+uv run python extract_pdfs.py
+uv run python server.py
+uv run python -m unittest discover -s tests -v
 ```
 
 Open the web viewer at:
