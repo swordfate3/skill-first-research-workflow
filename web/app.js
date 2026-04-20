@@ -35,18 +35,19 @@ async function loadDocuments() {
     return;
   }
 
-  for (const document of documents) {
-    const button = document.createElement("button");
+  for (const doc of documents) {
+    const button = globalThis.document.createElement("button");
     button.className = "document-item";
-    if (document.name === activeName) {
+    if (doc.name === activeName) {
       button.classList.add("active");
     }
     button.type = "button";
+    button.dataset.name = doc.name;
     button.innerHTML = `
-      <span class="document-title">${escapeHtml(document.title)}</span>
-      <span class="document-meta">${escapeHtml(document.type)} · ${escapeHtml(document.status)} · ${escapeHtml(document.name)}</span>
+      <span class="document-title">${escapeHtml(doc.title)}</span>
+      <span class="document-meta">${escapeHtml(doc.type)} · ${escapeHtml(doc.status)} · ${escapeHtml(doc.name)}</span>
     `;
-    button.addEventListener("click", () => loadDocument(document.name));
+    button.addEventListener("click", () => loadDocument(doc.name));
     listEl.appendChild(button);
   }
 
@@ -58,21 +59,21 @@ async function loadDocuments() {
 async function loadDocument(name) {
   activeName = name;
   const response = await fetch(`/api/document?name=${encodeURIComponent(name)}`);
-  const document = await response.json();
+  const doc = await response.json();
   if (!response.ok) {
-    viewEl.innerHTML = `<p>${escapeHtml(document.error || "加载失败")}</p>`;
+    viewEl.innerHTML = `<p>${escapeHtml(doc.error || "加载失败")}</p>`;
     return;
   }
 
   emptyEl.classList.add("hidden");
   viewEl.classList.remove("hidden");
   viewEl.innerHTML = `
-    <span class="status ${escapeHtml(document.status)}">${escapeHtml(document.status)}</span>
-    ${renderMarkdown(document.body)}
+    <span class="status ${escapeHtml(doc.status)}">${escapeHtml(doc.status)}</span>
+    ${renderMarkdown(doc.body)}
   `;
 
   [...listEl.querySelectorAll(".document-item")].forEach((item) => {
-    item.classList.toggle("active", item.textContent.includes(name));
+    item.classList.toggle("active", item.dataset.name === name);
   });
 }
 
