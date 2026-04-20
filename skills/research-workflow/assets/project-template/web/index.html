@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Research Workflow Outputs</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Skill-First Research Workflow</p>
+        <h1>研究输出</h1>
+      </div>
+      <button id="refreshButton" type="button">刷新</button>
+    </header>
+
+    <main class="layout">
+      <aside class="sidebar">
+        <section class="state-panel">
+          <div class="sidebar-title">状态</div>
+          <div id="stateSummary" class="state-summary">加载中...</div>
+        </section>
+        <div class="sidebar-title">文档</div>
+        <div id="documentList" class="document-list"></div>
+      </aside>
+
+      <section class="reader">
+        <div id="emptyState" class="empty-state">
+          把 Markdown 输出写入 <code>workspace/outputs/</code>，然后点击刷新。
+        </div>
+        <article id="documentView" class="document-view hidden"></article>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

@@ -9,6 +9,18 @@ Run the workflow automatically. The user should only need to add papers to `work
 
 Do not ask the user to run setup commands unless a command fails or a PDF needs OCR/manual text.
 
+## Bootstrap
+
+This installed skill includes a full project template under `assets/project-template/`.
+
+If the current working directory does not already contain `workflow.py`, `state.py`, and `workspace/papers/`, first run the bundled bootstrap script from this skill directory:
+
+```bash
+python scripts/bootstrap_project.py --dest .
+```
+
+After bootstrap, the current directory becomes a runnable research workflow project.
+
 ## Language
 
 默认使用中文写所有输出文档和最终回复。
@@ -25,7 +37,13 @@ Every paper card and collision document should include a short `## 术语对照`
 
 ## Start Here
 
-Immediately run:
+If `pyproject.toml` exists but dependencies are not ready yet, run:
+
+```bash
+uv sync
+```
+
+Then immediately run:
 
 ```bash
 uv run python workflow.py prepare

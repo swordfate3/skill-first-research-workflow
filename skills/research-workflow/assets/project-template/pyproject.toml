@@ -1,0 +1,10 @@
+[project]
+name = "skill-first-research-workflow"
+version = "0.1.0"
+description = "A lightweight skill-first workflow for research paper analysis and document review."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+
+[tool.uv]
+package = false

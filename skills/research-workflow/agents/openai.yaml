@@ -1,0 +1,5 @@
+version: 1
+interface:
+  display_name: Research Workflow
+  short_description: 把新论文自动整理成中文 paper card、碰撞想法和研究草稿。
+  default_prompt: 处理我当前目录里的新论文，自动生成中文研究输出。

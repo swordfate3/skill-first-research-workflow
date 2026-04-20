@@ -40,6 +40,7 @@ workspace/extracted/<paper-name>/
 - Added `workflow.py prepare` so the skill has one automatic entry point.
 - Simplified `SKILL.md`: user adds papers and invokes the skill; the Agent runs the rest.
 - Added default Chinese output rules with English technical terms preserved.
+- Added a bundled project template and bootstrap script so the skill can be installed with `npx skills add <owner>/<repo>@research-workflow`.
 
 ## Verified
 
