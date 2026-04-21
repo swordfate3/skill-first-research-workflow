@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 2026-04-20
+Last updated: 2026-04-21
 
 ## Current Direction
 
@@ -42,6 +42,10 @@ workspace/extracted/<paper-name>/
 - Added default Chinese output rules with English technical terms preserved.
 - Added a bundled project template and bootstrap script so the skill can be installed with `npx skills add <owner>/<repo>@research-workflow`.
 - Added the first scheme-B workflow upgrade: paper memory JSON, Top-K collision selection, and pending direction generation.
+- Ran the current two real AES papers through the full `memory -> paper card -> collision -> direction` chain.
+- Added runtime paper memory records under `workspace/memory/papers/` and generated the first real direction draft under `workspace/outputs/`.
+- Upgraded the local web viewer so documents can be filtered by `paper_card`, `collision`, and `direction`.
+- Added regression tests for direction scoring expectations, document filtering, and type-aware panel behavior.
 
 ## Verified
 
@@ -57,17 +61,17 @@ uv run python workflow.py prepare
 Current verification result:
 
 ```text
-7 unittest tests passed.
-Python files compiled successfully.
-workflow.py prepare scans papers, extracts/skips PDFs, keeps uncarded papers in the work queue, and returns next Agent actions.
+13 unittest tests passed.
+workflow.py prepare now returns no pending memory, card, collision, or direction work for the current two-paper workspace.
+The local web API sorts documents by paper_card -> collision -> direction and supports type filtering.
 ```
 
 ## Next Steps
 
-1. Invoke the skill on the current real PDFs and inspect generated paper cards.
-2. Improve table extraction if `tables.md` misses important experimental tables.
-3. Add web approval buttons for `pending`, `approved`, and `rejected` output documents.
-4. Decide whether to add OCR/MinerU/Marker as an optional advanced extraction path.
+1. Add a lightweight "all" filter and richer document grouping in the web panel if browsing starts to feel cramped.
+2. Tighten the direction template so recommended experiments, risks, and audit steps are more standardized.
+3. Add a tiny end-to-end smoke check for the web panel against real runtime outputs.
+4. Decide whether to add OCR/MinerU/Marker as an optional advanced extraction path for table-heavy PDFs.
 
 ## Useful Commands
 
