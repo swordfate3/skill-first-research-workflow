@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "title": "论文标题",
+    "source_file": "paper-a.pdf"
+  },
+  "classification": {
+    "primary_tags": [
+      "领域标签"
+    ],
+    "keywords": [
+      "关键词 1",
+      "关键词 2"
+    ]
+  },
+  "content": {
+    "problem": "这篇论文要解决的核心问题。",
+    "method": "论文采用的方法或关键技巧。",
+    "evidence": [
+      "最关键的一条实验或表格证据。"
+    ],
+    "limitations": [
+      "当前方法的局限性。"
+    ]
+  },
+  "innovation_seeds": {
+    "transferable_techniques": [
+      {
+        "technique": "可迁移技巧",
+        "potential_targets": [
+          "可能适用的对象或方向"
+        ],
+        "reasoning": "为什么这个技巧可能迁移得过去。"
+      }
+    ],
+    "open_problems": [
+      "论文留下的开放问题。"
+    ],
+    "weakness_opportunities": [
+      "可以继续改进的空缺。"
+    ]
+  }
+}

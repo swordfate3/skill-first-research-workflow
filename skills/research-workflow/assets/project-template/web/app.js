@@ -19,8 +19,11 @@ async function loadState() {
   const state = await response.json();
   stateEl.innerHTML = `
     <div><span class="state-number">${state.paper_count}</span> 论文</div>
+    <div><span class="state-number">${state.memory_count}</span> 已建 memory</div>
     <div><span class="state-number">${state.collision_count}</span> 已碰撞组合</div>
     <div><span class="state-number">${state.pending_collisions.length}</span> 待碰撞组合</div>
+    <div><span class="state-number">${state.direction_count}</span> 已生成方向</div>
+    <div><span class="state-number">${state.pending_directions.length}</span> 待生成方向</div>
   `;
 }
 

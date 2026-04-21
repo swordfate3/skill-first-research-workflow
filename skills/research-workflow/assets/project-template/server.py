@@ -93,10 +93,18 @@ def build_state_summary() -> dict:
     state = load_state(ROOT)
     return {
         "paper_count": len(state.get("papers", {})),
+        "memory_count": sum(
+            1
+            for paper in state.get("papers", {}).values()
+            if isinstance(paper, dict) and paper.get("paper_memory")
+        ),
         "collision_count": len(state.get("collisions", {})),
+        "direction_count": len(state.get("directions", {})),
         "new_papers": scan["new_papers"],
         "changed_papers": scan["changed_papers"],
+        "papers_to_memory": scan["papers_to_memory"],
         "pending_collisions": scan["pending_collisions"],
+        "pending_directions": scan["pending_directions"],
     }
 
 

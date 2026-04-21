@@ -2,6 +2,7 @@
 title: 创新碰撞想法
 type: collision
 status: pending
+score: 0.80
 source_papers:
   - paper-a.pdf
   - paper-b.pdf

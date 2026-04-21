@@ -15,6 +15,11 @@ workspace/extracted/*
 workspace/approvals/*
 !workspace/approvals/.gitkeep
 
+workspace/memory/*
+!workspace/memory/papers/
+workspace/memory/papers/*
+!workspace/memory/papers/.gitkeep
+
 workspace/outputs/*
 !workspace/outputs/.gitkeep
 !workspace/outputs/001-example-paper-card.md

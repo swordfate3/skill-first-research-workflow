@@ -51,8 +51,10 @@ uv run python workflow.py prepare
 
 Use the JSON result:
 
+- `papers_to_memory`: write structured paper memory JSON for these papers first.
 - `papers_to_card`: create or recreate paper cards for these papers only.
 - `pending_collisions`: create collision documents for these pairs only.
+- `pending_directions`: draft direction documents for these high-priority collisions.
 - `pdf_extraction.failed`: tell the user these PDFs need OCR or manual text.
 - If `next_actions` says no work is needed, stop and report that nothing new was found.
 
@@ -63,6 +65,7 @@ Read from:
 ```text
 workspace/papers/
 workspace/extracted/
+workspace/memory/papers/
 ```
 
 For PDFs, prefer:
@@ -85,6 +88,12 @@ Write Markdown files to:
 workspace/outputs/
 ```
 
+Write structured paper memory JSON to:
+
+```text
+workspace/memory/papers/
+```
+
 Every output starts with:
 
 ```markdown
@@ -98,6 +107,28 @@ source_papers:
 ```
 
 ## Paper Cards
+
+Before writing a paper card, create a structured paper memory JSON for each `papers_to_memory` item:
+
+```text
+workspace/memory/papers/<paper-name>.json
+```
+
+Use `templates/paper-memory.json` and focus on:
+
+- classification
+- keywords
+- problem
+- method
+- evidence
+- limitations
+- innovation_seeds
+
+After each memory file, immediately run:
+
+```bash
+uv run python state.py mark-memory <paper_path> <memory_file>
+```
 
 For each `papers_to_card` item, write:
 
@@ -149,21 +180,50 @@ Each idea needs:
 - 第一个实验
 - 0.0 到 1.0 分数
 
+Prefer the candidate `score` and `reasons` from `pending_collisions` as your starting prior. The workflow already filtered to the current Top-K collision set.
+
 After each collision document, immediately run:
 
 ```bash
 uv run python state.py mark-collision <paper_a> <paper_b> <output_file>
 ```
 
+## Research Directions
+
+For each `pending_directions` item, write:
+
+```text
+004-direction-<short-name>.md
+```
+
+Use `templates/direction.md` and include:
+
+- 研究问题
+- 为什么值得做
+- 基于哪些碰撞
+- 技术路径
+- 第一个实验
+- 风险
+- 推荐分数
+- 术语对照
+
+After each direction document, immediately run:
+
+```bash
+uv run python state.py mark-direction <collision_key> <output_file>
+```
+
 ## Optional Drafting
 
-Only write prototype or draft documents when a collision idea is clearly strong or the user asks for it.
+Only write prototype or draft documents when a direction is clearly strong or the user asks for it.
 
 ## Finish
 
 Report briefly:
 
 - files created
+- paper memory files created
 - papers skipped because unchanged
 - collisions generated
+- directions generated
 - PDFs needing OCR/manual text

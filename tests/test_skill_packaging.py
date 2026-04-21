@@ -31,7 +31,9 @@ class SkillPackagingTests(unittest.TestCase):
             "extract_pdfs.py",
             "server.py",
             "templates/paper-card.md",
+            "templates/paper-memory.json",
             "templates/collision-ideas.md",
+            "templates/direction.md",
             "templates/prototype.md",
             "templates/draft.md",
             "web/index.html",
@@ -41,6 +43,7 @@ class SkillPackagingTests(unittest.TestCase):
             "workspace/outputs/.gitkeep",
             "workspace/extracted/.gitkeep",
             "workspace/approvals/.gitkeep",
+            "workspace/memory/papers/.gitkeep",
         ]
 
         for relative in expected_files:

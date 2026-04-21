@@ -5,7 +5,7 @@
 它的目标很简单：
 
 ```text
-装 skill -> 建工作目录 -> 放论文 -> 调用 skill -> 看输出
+装 skill -> 建工作目录 -> 放论文 -> 调用 skill -> 看 memory / 碰撞 / 方向输出
 ```
 
 ---
@@ -179,9 +179,11 @@ skill 会自动做这些事：
 1. 扫描 `workspace/papers/`
 2. 识别哪些论文是新的、哪些改过、哪些没变
 3. 对 PDF 做正文 / 表格 / 公式 / 图表线索提取
-4. 生成 paper card
-5. 生成论文之间的创新碰撞
-6. 更新状态文件，避免重复处理
+4. 为每篇论文生成结构化 paper memory
+5. 生成 paper card
+6. 只保留 Top-K 高价值创新碰撞
+7. 基于高分碰撞继续生成研究方向
+8. 更新状态文件，避免重复处理
 
 ---
 
@@ -215,6 +217,21 @@ workspace/extracted/paper-a/figures.md
 workspace/extracted/paper-a/manifest.json
 ```
 
+### 结构化 paper memory
+
+写到：
+
+```text
+workspace/memory/papers/
+```
+
+例如：
+
+```text
+workspace/memory/papers/paper-a.json
+workspace/memory/papers/paper-b.json
+```
+
 ### 最终输出文档
 
 写到：
@@ -229,6 +246,7 @@ workspace/outputs/
 workspace/outputs/001-paper-card-xxx.md
 workspace/outputs/002-paper-card-yyy.md
 workspace/outputs/003-collision-xxx-yyy.md
+workspace/outputs/004-direction-xxx.md
 ```
 
 ### 状态文件
@@ -243,7 +261,9 @@ workspace/state.json
 
 - 哪些论文处理过
 - 哪些论文内容发生过变化
+- 哪些论文已经生成 memory / card
 - 哪些组合已经做过碰撞
+- 哪些碰撞已经升格成方向
 
 ---
 
@@ -280,9 +300,11 @@ workspace/state.json
 它会自动判断：
 
 - 哪些是新论文
+- 哪些论文还没有 memory
 - 哪些论文已经处理过
 - 哪些论文变了
 - 哪些碰撞组合已经存在
+- 哪些高分碰撞还没生成方向
 
 所以你不需要手动管理重复。
 
@@ -307,7 +329,13 @@ http://127.0.0.1:8765
 - `workspace/outputs/`
 - `workspace/state.json`
 
-所以网页展示的是这一次工作目录里的研究结果，不是 skill 安装目录里的内容。
+所以网页展示的是这一次工作目录里的研究结果，不是 skill 安装目录里的内容。状态面板也会显示：
+
+- 论文数
+- 已建 memory 数
+- 已碰撞组合数
+- 已生成方向数
+- 待生成方向数
 
 ---
 
@@ -339,6 +367,7 @@ workspace/papers/
 
 查看结果：
 
+- 结构化 memory：`workspace/memory/papers/`
 - Markdown 文档：`workspace/outputs/`
 - 本地网页：`uv run python server.py`
 

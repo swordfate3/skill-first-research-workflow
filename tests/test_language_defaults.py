@@ -23,6 +23,7 @@ class LanguageDefaultTests(unittest.TestCase):
             "collision-ideas.md": "## 候选方向 1",
             "prototype.md": "## 研究问题",
             "draft.md": "## 摘要",
+            "direction.md": "## 为什么值得做",
         }
 
         for filename, title in expected_titles.items():

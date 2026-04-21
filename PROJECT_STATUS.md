@@ -41,6 +41,7 @@ workspace/extracted/<paper-name>/
 - Simplified `SKILL.md`: user adds papers and invokes the skill; the Agent runs the rest.
 - Added default Chinese output rules with English technical terms preserved.
 - Added a bundled project template and bootstrap script so the skill can be installed with `npx skills add <owner>/<repo>@research-workflow`.
+- Added the first scheme-B workflow upgrade: paper memory JSON, Top-K collision selection, and pending direction generation.
 
 ## Verified
 

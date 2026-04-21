@@ -23,24 +23,40 @@ def prepare_workspace(
     scan = state.scan_workspace(root)
     pdf_extraction = extract_pdfs.extract_all(root, extractor=extractor)
 
+    papers_to_memory = scan["papers_to_memory"]
     papers_to_card = build_papers_to_card(root, scan)
     pending_collisions = scan["pending_collisions"]
+    pending_directions = scan["pending_directions"]
     failed_pdfs = pdf_extraction["failed"]
 
     return {
+        "papers_to_memory": papers_to_memory,
         "papers_to_card": papers_to_card,
         "pending_collisions": pending_collisions,
+        "pending_directions": pending_directions,
         "pdf_extraction": pdf_extraction,
-        "next_actions": build_next_actions(papers_to_card, pending_collisions, failed_pdfs),
+        "next_actions": build_next_actions(
+            papers_to_memory,
+            papers_to_card,
+            pending_collisions,
+            pending_directions,
+            failed_pdfs,
+        ),
     }
 
 
 def build_next_actions(
+    papers_to_memory: list[dict],
     papers_to_card: list[str],
     pending_collisions: list[dict],
+    pending_directions: list[dict],
     failed_pdfs: list[str],
 ) -> list[str]:
     actions = []
+    if papers_to_memory:
+        count = len(papers_to_memory)
+        label = "record" if count == 1 else "records"
+        actions.append(f"Create {count} paper memory {label} before collision scoring.")
     if papers_to_card:
         count = len(papers_to_card)
         label = "paper" if count == 1 else "papers"
@@ -49,24 +65,27 @@ def build_next_actions(
         count = len(pending_collisions)
         label = "document" if count == 1 else "documents"
         actions.append(f"Generate {count} pending collision {label}.")
+    if pending_directions:
+        count = len(pending_directions)
+        label = "direction" if count == 1 else "directions"
+        actions.append(f"Draft {count} high-priority research {label}.")
     if failed_pdfs:
         actions.append(f"Ask for OCR or manual text for {len(failed_pdfs)} failed PDFs.")
     if not actions:
-        actions.append("No new paper cards or collisions are needed.")
+        actions.append("No new memory records, paper cards, collisions, or directions are needed.")
     return actions
 
 
 def build_papers_to_card(root: Path, scan: dict) -> list[str]:
-    queued = {
-        item["path"]
-        for item in scan["new_papers"] + scan["changed_papers"]
-        if "path" in item
-    }
+    del scan
     current_state = state.load_state(root)
+    queued = []
     for paper_path, paper in current_state.get("papers", {}).items():
-        if isinstance(paper, dict) and not paper.get("paper_card"):
-            queued.add(paper_path)
-    return sorted(queued)
+        if not isinstance(paper, dict):
+            continue
+        if paper.get("paper_memory") and not paper.get("paper_card"):
+            queued.append(paper_path)
+    return sorted(set(queued))
 
 
 def main(argv: list[str] | None = None, stdout: TextIO | None = None) -> int:
