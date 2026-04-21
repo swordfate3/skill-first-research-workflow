@@ -17,6 +17,11 @@ WEB_ROOT = ROOT / "web"
 OUTPUTS_ROOT = ROOT / "workspace" / "outputs"
 HOST = "127.0.0.1"
 PORT = 8765
+DOCUMENT_TYPE_ORDER = {
+    "paper_card": 0,
+    "collision": 1,
+    "direction": 2,
+}
 
 
 class ResearchWorkflowHandler(BaseHTTPRequestHandler):
@@ -32,7 +37,9 @@ class ResearchWorkflowHandler(BaseHTTPRequestHandler):
             self._serve_file(WEB_ROOT / "styles.css", "text/css; charset=utf-8")
             return
         if parsed.path == "/api/documents":
-            self._send_json(list_documents())
+            query = parse_qs(parsed.query)
+            doc_type = query.get("doc_type", query.get("type", [""]))[0] or None
+            self._send_json(list_documents(doc_type=doc_type))
             return
         if parsed.path == "/api/state":
             self._send_json(build_state_summary())
@@ -71,20 +78,29 @@ class ResearchWorkflowHandler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
 
-def list_documents() -> list[dict]:
+def list_documents(doc_type: str | None = None) -> list[dict]:
     OUTPUTS_ROOT.mkdir(parents=True, exist_ok=True)
     documents = []
     for path in sorted(OUTPUTS_ROOT.glob("*.md")):
         content = path.read_text(encoding="utf-8", errors="replace")
         metadata, body = split_frontmatter(content)
+        document_type = metadata.get("type") or "note"
+        if doc_type and document_type != doc_type:
+            continue
         documents.append(
             {
                 "name": path.name,
                 "title": metadata.get("title") or infer_title(body) or path.stem,
-                "type": metadata.get("type") or "note",
+                "type": document_type,
                 "status": metadata.get("status") or "unknown",
             }
         )
+    documents.sort(
+        key=lambda item: (
+            DOCUMENT_TYPE_ORDER.get(item["type"], len(DOCUMENT_TYPE_ORDER)),
+            item["name"],
+        )
+    )
     return documents
 
 

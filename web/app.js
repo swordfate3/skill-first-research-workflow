@@ -3,15 +3,28 @@ const viewEl = document.querySelector("#documentView");
 const emptyEl = document.querySelector("#emptyState");
 const refreshButton = document.querySelector("#refreshButton");
 const stateEl = document.querySelector("#stateSummary");
+const filterButtons = [...document.querySelectorAll("[data-filter]")];
 
 let activeName = "";
+let activeFilter = "paper_card";
 
 refreshButton.addEventListener("click", refresh);
+for (const button of filterButtons) {
+  button.addEventListener("click", () => {
+    const nextFilter = button.dataset.filter || "paper_card";
+    if (nextFilter === activeFilter) {
+      return;
+    }
+    activeFilter = nextFilter;
+    activeName = "";
+    refresh();
+  });
+}
 
 refresh();
 
 async function refresh() {
-  await Promise.all([loadState(), loadDocuments()]);
+  await Promise.all([loadState(), loadDocuments(activeFilter)]);
 }
 
 async function loadState() {
@@ -28,13 +41,16 @@ async function loadState() {
 }
 
 async function loadDocuments() {
-  const response = await fetch("/api/documents");
+  const query = activeFilter ? `?type=${encodeURIComponent(activeFilter)}` : "";
+  const response = await fetch(`/api/documents${query}`);
   const documents = await response.json();
   listEl.innerHTML = "";
+  updateFilterButtons();
 
   if (!documents.length) {
     emptyEl.classList.remove("hidden");
     viewEl.classList.add("hidden");
+    activeName = "";
     return;
   }
 
@@ -54,9 +70,18 @@ async function loadDocuments() {
     listEl.appendChild(button);
   }
 
+  if (activeName && documents.some((doc) => doc.name === activeName)) {
+    await loadDocument(activeName);
+    return;
+  }
+
   if (!activeName) {
     await loadDocument(documents[0].name);
+    return;
   }
+
+  activeName = documents[0].name;
+  await loadDocument(activeName);
 }
 
 async function loadDocument(name) {
@@ -78,6 +103,12 @@ async function loadDocument(name) {
   [...listEl.querySelectorAll(".document-item")].forEach((item) => {
     item.classList.toggle("active", item.dataset.name === name);
   });
+}
+
+function updateFilterButtons() {
+  for (const button of filterButtons) {
+    button.classList.toggle("active", button.dataset.filter === activeFilter);
+  }
 }
 
 function renderMarkdown(markdown) {
