@@ -185,8 +185,10 @@ class SkillFirstStateTests(unittest.TestCase):
                 "paper-b.txt",
                 "workspace/outputs/collision-a-b.md",
             )
+            collision = state.load_state(root)["collisions"]["paper-a.txt::paper-b.txt"]
             summary = state.scan_workspace(root)
 
+        self.assertGreaterEqual(collision["score"], state.MIN_DIRECTION_SCORE)
         self.assertEqual(len(summary["pending_directions"]), 1)
         self.assertEqual(
             summary["pending_directions"][0]["collision_key"],
@@ -226,6 +228,7 @@ class SkillFirstStateTests(unittest.TestCase):
                 "paper-b.txt",
                 "workspace/outputs/collision-a-b.md",
             )
+            collision = state.load_state(root)["collisions"]["paper-a.txt::paper-b.txt"]
             before = state.scan_workspace(root)
             state.mark_direction(
                 root,
@@ -234,6 +237,7 @@ class SkillFirstStateTests(unittest.TestCase):
             )
             after = state.scan_workspace(root)
 
+        self.assertGreaterEqual(collision["score"], state.MIN_DIRECTION_SCORE)
         self.assertEqual(len(before["pending_directions"]), 1)
         self.assertEqual(after["pending_directions"], [])
 

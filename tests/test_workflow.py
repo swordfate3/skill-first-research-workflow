@@ -75,6 +75,10 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(second["pending_collisions"][0]["key"], "paper-a.txt::paper-b.pdf")
         self.assertEqual(second["next_actions"][0], "Generate 1 pending collision document.")
         self.assertEqual(len(third["pending_directions"]), 1)
+        self.assertGreaterEqual(
+            third["pending_directions"][0]["score"],
+            workflow.state.MIN_DIRECTION_SCORE,
+        )
         self.assertEqual(third["next_actions"][0], "Draft 1 high-priority research direction.")
         self.assertEqual(fourth["pending_directions"], [])
         self.assertNotIn("Draft 1 high-priority research direction.", fourth["next_actions"])
