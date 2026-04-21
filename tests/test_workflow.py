@@ -53,6 +53,10 @@ class WorkflowTests(unittest.TestCase):
                 root, "paper-a.txt", "paper-b.pdf", "003-collision.md"
             )
             third = workflow.prepare_workspace(root, extractor=fake_extractor)
+            workflow.state.mark_direction(
+                root, "paper-a.txt::paper-b.pdf", "004-direction.md"
+            )
+            fourth = workflow.prepare_workspace(root, extractor=fake_extractor)
 
         self.assertEqual(
             first["papers_to_memory"],
@@ -72,6 +76,8 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(second["next_actions"][0], "Generate 1 pending collision document.")
         self.assertEqual(len(third["pending_directions"]), 1)
         self.assertEqual(third["next_actions"][0], "Draft 1 high-priority research direction.")
+        self.assertEqual(fourth["pending_directions"], [])
+        self.assertNotIn("Draft 1 high-priority research direction.", fourth["next_actions"])
 
     def test_prepare_workspace_keeps_uncarded_scanned_papers_in_work_queue(self):
         workflow = load_workflow_module()

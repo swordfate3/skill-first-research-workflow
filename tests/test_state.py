@@ -193,6 +193,50 @@ class SkillFirstStateTests(unittest.TestCase):
             "paper-a.txt::paper-b.txt",
         )
 
+    def test_mark_direction_clears_pending_directions(self):
+        state = load_state_module()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            papers_dir = root / "workspace" / "papers"
+            memory_dir = root / "workspace" / "memory" / "papers"
+            papers_dir.mkdir(parents=True)
+            memory_dir.mkdir(parents=True)
+
+            for name, topic in [
+                ("paper-a.txt", "aes differential neural distinguisher"),
+                ("paper-b.txt", "aes ciphertext distinguisher neural"),
+            ]:
+                (papers_dir / name).write_text(topic, encoding="utf-8")
+                state.scan_workspace(root)
+                state.mark_paper_memory(
+                    root,
+                    name,
+                    f"workspace/memory/papers/{Path(name).stem}.json",
+                )
+                (memory_dir / f"{Path(name).stem}.json").write_text(
+                    json_memory_fixture(name, topic),
+                    encoding="utf-8",
+                )
+                state.mark_paper_card(root, name, f"workspace/outputs/{Path(name).stem}.md")
+
+            state.mark_collision(
+                root,
+                "paper-a.txt",
+                "paper-b.txt",
+                "workspace/outputs/collision-a-b.md",
+            )
+            before = state.scan_workspace(root)
+            state.mark_direction(
+                root,
+                "paper-a.txt::paper-b.txt",
+                "workspace/outputs/direction-a-b.md",
+            )
+            after = state.scan_workspace(root)
+
+        self.assertEqual(len(before["pending_directions"]), 1)
+        self.assertEqual(after["pending_directions"], [])
+
 
 def json_memory_fixture(name: str, topic: str) -> str:
     stem = Path(name).stem
