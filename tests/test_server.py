@@ -36,17 +36,38 @@ class ServerTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             outputs_root = Path(tmpdir) / "workspace" / "outputs"
             outputs_root.mkdir(parents=True)
-            write_document(outputs_root / "b-direction.md", title="B Direction", doc_type="direction")
-            write_document(outputs_root / "z-direction.md", title="Z Direction", doc_type="direction")
-            write_document(outputs_root / "a-note.md", title="A Note", doc_type="note")
-            write_document(outputs_root / "m-note.md", title="M Note", doc_type="note")
+            write_document(
+                outputs_root / "b-paper-card.md",
+                title="B Paper Card",
+                doc_type="paper_card",
+            )
+            write_document(
+                outputs_root / "a-paper-card.md",
+                title="A Paper Card",
+                doc_type="paper_card",
+            )
+            write_document(
+                outputs_root / "c-collision.md",
+                title="C Collision",
+                doc_type="collision",
+            )
+            write_document(
+                outputs_root / "a-direction.md",
+                title="A Direction",
+                doc_type="direction",
+            )
 
             with patch.object(server, "OUTPUTS_ROOT", outputs_root):
                 documents = server.list_documents()
 
         self.assertEqual(
             [doc["name"] for doc in documents],
-            ["b-direction.md", "z-direction.md", "a-note.md", "m-note.md"],
+            [
+                "a-paper-card.md",
+                "b-paper-card.md",
+                "c-collision.md",
+                "a-direction.md",
+            ],
         )
 
     def test_list_documents_can_filter_by_type(self):
@@ -55,14 +76,26 @@ class ServerTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             outputs_root = Path(tmpdir) / "workspace" / "outputs"
             outputs_root.mkdir(parents=True)
-            write_document(outputs_root / "a-direction.md", title="A Direction", doc_type="direction")
-            write_document(outputs_root / "b-note.md", title="B Note", doc_type="note")
-            write_document(outputs_root / "c-direction.md", title="C Direction", doc_type="direction")
+            write_document(
+                outputs_root / "a-paper-card.md",
+                title="A Paper Card",
+                doc_type="paper_card",
+            )
+            write_document(
+                outputs_root / "b-collision.md",
+                title="B Collision",
+                doc_type="collision",
+            )
+            write_document(
+                outputs_root / "c-direction.md",
+                title="C Direction",
+                doc_type="direction",
+            )
 
             with patch.object(server, "OUTPUTS_ROOT", outputs_root):
-                documents = server.list_documents(type_filter="direction")
+                documents = server.list_documents(doc_type="direction")
 
-        self.assertEqual([doc["name"] for doc in documents], ["a-direction.md", "c-direction.md"])
+        self.assertEqual([doc["name"] for doc in documents], ["c-direction.md"])
 
 
 if __name__ == "__main__":
