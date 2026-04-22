@@ -7,6 +7,8 @@ description: Use when the user wants an Agent to process newly added research pa
 
 Run the workflow automatically. The user should only need to add papers to `workspace/papers/` and invoke this skill.
 
+If the local web panel is running via `uv run python server.py`, it can also accept multi-PDF uploads and save them into `workspace/papers/` automatically.
+
 Do not ask the user to run setup commands unless a command fails or a PDF needs OCR/manual text.
 
 ## PDF Extraction Mode

@@ -45,6 +45,8 @@ workspace/papers/
 - 结构化 memory：`workspace/memory/papers/`
 - 网页：`uv run python server.py`
 
+也可以直接打开网页后上传 PDF，系统会自动把文件保存到 `workspace/papers/` 并开始处理。
+
 ---
 
 ## 它怎么工作
@@ -162,6 +164,25 @@ workspace/papers/paper-b.pdf
 workspace/papers/notes.md
 ```
 
+也可以选择直接打开本地 Web，然后在页面里上传 PDF：
+
+```bash
+uv run python server.py
+```
+
+打开：
+
+```text
+http://127.0.0.1:8765
+```
+
+网页上传目前支持：
+
+- 多个 PDF 一次选择
+- 保存到 `workspace/papers/`
+- 同名覆盖
+- 上传后自动触发处理
+
 ### 6. 调用 skill
 
 对 Agent 说：
@@ -179,6 +200,8 @@ workspace/papers/notes.md
 ```text
 workspace/papers/
 ```
+
+如果是从网页上传，PDF 也会先落到这里。
 
 ### PDF 提取结果
 

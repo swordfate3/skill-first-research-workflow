@@ -30,6 +30,11 @@ class WebAssetTests(unittest.TestCase):
         self.assertIn("direction", app_js)
         self.assertIn("document-group", app_js)
         self.assertIn("group-title", app_js)
+        self.assertIn('id="uploadButton"', index_html)
+        self.assertIn('id="paperUploadInput"', index_html)
+        self.assertIn('id="uploadStatusList"', index_html)
+        self.assertIn("/api/upload-papers", app_js)
+        self.assertIn("/api/upload-status", app_js)
 
     def test_skill_template_web_assets_include_type_filter_controls(self):
         root = (
@@ -55,6 +60,19 @@ class WebAssetTests(unittest.TestCase):
         self.assertIn("direction", app_js)
         self.assertIn("document-group", app_js)
         self.assertIn("group-title", app_js)
+
+    def test_web_assets_include_upload_controls_and_status_polling(self):
+        root = Path(__file__).resolve().parents[1] / "web"
+        app_js = (root / "app.js").read_text(encoding="utf-8")
+        index_html = (root / "index.html").read_text(encoding="utf-8")
+
+        self.assertIn('id="uploadButton"', index_html)
+        self.assertIn('id="paperUploadInput"', index_html)
+        self.assertIn('id="uploadStatusList"', index_html)
+        self.assertIn("/api/upload-papers", app_js)
+        self.assertIn("/api/upload-status", app_js)
+        self.assertIn("pollUploadStatus", app_js)
+        self.assertIn("renderUploadStatus", app_js)
 
 
 if __name__ == "__main__":

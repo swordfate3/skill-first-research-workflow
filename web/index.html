@@ -17,6 +17,13 @@
 
     <main class="layout">
       <aside class="sidebar">
+        <section class="upload-panel" aria-label="上传论文">
+          <div class="sidebar-title">上传</div>
+          <button id="uploadButton" type="button">上传 PDF</button>
+          <input id="paperUploadInput" type="file" accept=".pdf,application/pdf" multiple hidden>
+          <div id="uploadHint" class="upload-hint">支持多选 PDF，上传后会自动开始处理。</div>
+          <div id="uploadStatusList" class="upload-status-list"></div>
+        </section>
         <section class="state-panel">
           <div class="sidebar-title">状态</div>
           <div id="stateSummary" class="state-summary">加载中...</div>

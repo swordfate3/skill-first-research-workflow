@@ -84,6 +84,11 @@ button:focus-visible {
   padding-bottom: 16px;
 }
 
+.upload-panel {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 16px;
+}
+
 .filter-panel {
   border-bottom: 1px solid var(--line);
   padding-bottom: 16px;
@@ -112,6 +117,61 @@ button.filter-chip.active {
   gap: 8px;
   color: var(--muted);
   font-size: 13px;
+}
+
+.upload-hint {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.upload-status-list {
+  display: grid;
+  gap: 8px;
+}
+
+.upload-status-item {
+  display: grid;
+  gap: 4px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  padding: 10px 12px;
+}
+
+.upload-file-name {
+  font-size: 13px;
+  word-break: break-word;
+}
+
+.upload-file-state {
+  width: fit-content;
+  border-radius: 999px;
+  background: #f0f0eb;
+  color: var(--muted);
+  padding: 3px 8px;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.upload-file-state.processing {
+  background: #e9f4f0;
+  color: var(--accent);
+}
+
+.upload-file-state.completed {
+  background: #edf4ea;
+  color: #2b6b2f;
+}
+
+.upload-file-state.failed {
+  background: #fdeaea;
+  color: #a23939;
+}
+
+.upload-file-error {
+  color: #a23939;
+  font-size: 12px;
 }
 
 .state-number {

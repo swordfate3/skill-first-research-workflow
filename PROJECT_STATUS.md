@@ -51,6 +51,8 @@ workspace/extracted/<paper-name>/
 - Added an optional MinerU extraction backend so PDF extraction can fall back from lightweight parsing to MinerU Docker.
 - Reorganized `workspace/outputs/` into grouped subdirectories with an `index.json` catalog and added a migration script for old flat outputs.
 - Added regression tests for direction scoring expectations, document filtering, and type-aware panel behavior.
+- Added Web-side multi-PDF upload so new papers can be saved into `workspace/papers/` and automatically trigger extraction plus workflow preparation.
+- Synced the upload-enabled server and front-end into the shipped skill template.
 
 ## Verified
 
@@ -66,14 +68,15 @@ uv run python workflow.py prepare
 Current verification result:
 
 ```text
-25 unittest tests passed, including grouped-output and migration coverage.
+35 unittest tests passed, including grouped-output, upload workflow, and migration coverage.
 workflow.py prepare now returns no pending memory, card, collision, or direction work for the current two-paper workspace.
-The local web API now prefers `workspace/outputs/index.json`, falls back to scanning grouped output directories when needed, supports type filtering, grouped `all` browsing, clearer direction templates, real-output smoke coverage, and PDF extraction strategies `auto | lightweight | mineru`.
+The local web API now prefers `workspace/outputs/index.json`, falls back to scanning grouped output directories when needed, supports type filtering, grouped `all` browsing, upload status polling, auto-saving PDF uploads into `workspace/papers/`, clearer direction templates, real-output smoke coverage, and PDF extraction strategies `auto | lightweight | mineru`.
 ```
 
 ## Next Steps
 
 1. Decide whether to add a richer auto-detection heuristic for “table-heavy / formula-heavy / scanned PDF” instead of only failing over to MinerU after lightweight extraction fails.
+2. Consider whether uploads should also auto-generate paper memory/card/collision/direction documents instead of stopping at extraction plus workflow preparation.
 
 ## Useful Commands
 

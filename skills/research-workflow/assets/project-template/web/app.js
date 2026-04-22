@@ -3,13 +3,28 @@ const viewEl = document.querySelector("#documentView");
 const emptyEl = document.querySelector("#emptyState");
 const refreshButton = document.querySelector("#refreshButton");
 const stateEl = document.querySelector("#stateSummary");
+const uploadButton = document.querySelector("#uploadButton");
+const uploadInput = document.querySelector("#paperUploadInput");
+const uploadHintEl = document.querySelector("#uploadHint");
+const uploadStatusListEl = document.querySelector("#uploadStatusList");
 const filterButtons = [...document.querySelectorAll("[data-filter]")];
 const documentTypeOrder = ["paper_card", "collision", "direction"];
 
 let activeName = "";
 let activeFilter = "all";
+let uploadPollTimer = 0;
+let pendingUploadBatchId = "";
 
 refreshButton.addEventListener("click", refresh);
+uploadButton.addEventListener("click", () => uploadInput.click());
+uploadInput.addEventListener("change", async () => {
+  const files = [...uploadInput.files];
+  uploadInput.value = "";
+  if (!files.length) {
+    return;
+  }
+  await uploadFiles(files);
+});
 for (const button of filterButtons) {
   button.addEventListener("click", () => {
     const nextFilter = button.dataset.filter || "all";
@@ -23,9 +38,39 @@ for (const button of filterButtons) {
 }
 
 refresh();
+loadUploadStatus();
 
 async function refresh() {
   await Promise.all([loadState(), loadDocuments(activeFilter)]);
+}
+
+async function uploadFiles(files) {
+  const payload = new FormData();
+  for (const file of files) {
+    payload.append("files", file);
+  }
+  uploadHintEl.textContent = `正在上传 ${files.length} 个 PDF...`;
+
+  const response = await fetch("/api/upload-papers", {
+    method: "POST",
+    body: payload,
+  });
+  const result = await response.json();
+  if (!response.ok) {
+    uploadHintEl.textContent = result.error || "上传失败";
+    return;
+  }
+
+  pendingUploadBatchId = result.batch_id || "";
+  renderUploadStatus({
+    files: result.files || [],
+    is_processing: true,
+    queue_size: 0,
+    active_batch_id: pendingUploadBatchId,
+    last_error: "",
+  });
+  uploadHintEl.textContent = `已接收 ${files.length} 个 PDF，开始处理。`;
+  pollUploadStatus();
 }
 
 async function loadState() {
@@ -201,6 +246,70 @@ function renderMarkdown(markdown) {
   }
 
   return html.join("\n");
+}
+
+async function loadUploadStatus() {
+  const response = await fetch("/api/upload-status");
+  const status = await response.json();
+  renderUploadStatus(status);
+  if ((status.is_processing || status.queue_size > 0) && !uploadPollTimer) {
+    uploadPollTimer = window.setTimeout(pollUploadStatus, 1200);
+  }
+  return status;
+}
+
+async function pollUploadStatus() {
+  clearTimeout(uploadPollTimer);
+  uploadPollTimer = 0;
+  const status = await loadUploadStatus();
+  if (status.is_processing || status.queue_size > 0) {
+    uploadPollTimer = window.setTimeout(pollUploadStatus, 1200);
+    return;
+  }
+
+  if (pendingUploadBatchId && status.active_batch_id === pendingUploadBatchId) {
+    pendingUploadBatchId = "";
+    uploadHintEl.textContent = status.last_error ? status.last_error : "处理完成，面板已刷新。";
+    await refresh();
+  }
+}
+
+function renderUploadStatus(status) {
+  const files = Array.isArray(status.files) ? status.files : [];
+  uploadStatusListEl.innerHTML = "";
+
+  if (!files.length) {
+    if (!pendingUploadBatchId) {
+      uploadHintEl.textContent = "支持多选 PDF，上传后会自动开始处理。";
+    }
+    return;
+  }
+
+  for (const item of files) {
+    const row = globalThis.document.createElement("div");
+    row.className = "upload-status-item";
+    row.innerHTML = `
+      <span class="upload-file-name">${escapeHtml(item.name || "")}</span>
+      <span class="upload-file-state ${escapeHtml(item.status || "unknown")}">${escapeHtml(
+        item.status || "unknown"
+      )}</span>
+    `;
+    if (item.error) {
+      const errorEl = globalThis.document.createElement("div");
+      errorEl.className = "upload-file-error";
+      errorEl.textContent = item.error;
+      row.appendChild(errorEl);
+    }
+    uploadStatusListEl.appendChild(row);
+  }
+
+  if (status.last_error) {
+    uploadHintEl.textContent = status.last_error;
+  } else if (status.is_processing) {
+    uploadHintEl.textContent = `正在处理 ${files.length} 个 PDF...`;
+  } else {
+    uploadHintEl.textContent = "最近一批 PDF 已处理完成。";
+  }
 }
 
 function inlineMarkdown(value) {

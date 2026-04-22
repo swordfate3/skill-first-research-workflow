@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import cgi
 import json
 import sys
+import threading
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
@@ -11,10 +14,13 @@ ROOT = Path(__file__).resolve().parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+import extract_pdfs
+import workflow
 from state import load_state, scan_workspace
 
 WEB_ROOT = ROOT / "web"
 OUTPUTS_ROOT = ROOT / "workspace" / "outputs"
+PAPERS_ROOT = ROOT / "workspace" / "papers"
 HOST = "127.0.0.1"
 PORT = 8765
 DOCUMENT_TYPE_ORDER = {
@@ -22,6 +28,126 @@ DOCUMENT_TYPE_ORDER = {
     "collision": 1,
     "direction": 2,
 }
+
+
+class UploadManager:
+    def __init__(self, root: Path, processor=None) -> None:
+        self.root = Path(root)
+        self.processor = processor or run_processing_pipeline
+        self._lock = threading.Lock()
+        self._queue: list[dict] = []
+        self._current_batch: dict | None = None
+        self._last_batch: dict | None = None
+        self._worker: threading.Thread | None = None
+        self._batch_counter = 0
+
+    def enqueue_uploads(self, files: list[tuple[str, bytes]]) -> dict:
+        if not files:
+            raise ValueError("没有可上传的 PDF 文件。")
+
+        saved_files = []
+        papers_root = papers_root_for(self.root)
+        papers_root.mkdir(parents=True, exist_ok=True)
+
+        for original_name, payload in files:
+            name = Path(original_name).name.strip()
+            if not name:
+                raise ValueError("文件名不能为空。")
+            if Path(name).suffix.lower() != ".pdf":
+                raise ValueError("仅支持 PDF 上传。")
+            target = papers_root / name
+            target.write_bytes(payload)
+            saved_files.append({"name": name, "status": "queued", "error": ""})
+
+        batch = {
+            "batch_id": self._next_batch_id(),
+            "files": saved_files,
+            "last_error": "",
+        }
+
+        with self._lock:
+            self._queue.append(batch)
+            self._last_batch = batch
+            self._ensure_worker_locked()
+
+        return {
+            "batch_id": batch["batch_id"],
+            "files": [{"name": item["name"], "status": item["status"]} for item in batch["files"]],
+        }
+
+    def snapshot(self) -> dict:
+        with self._lock:
+            visible_batch = self._current_batch or self._last_batch
+            files = []
+            active_batch_id = ""
+            last_error = ""
+            if visible_batch:
+                files = [dict(item) for item in visible_batch.get("files", [])]
+                active_batch_id = visible_batch.get("batch_id", "")
+                last_error = visible_batch.get("last_error", "")
+
+            return {
+                "active_batch_id": active_batch_id,
+                "is_processing": self._current_batch is not None,
+                "queue_size": len(self._queue),
+                "files": files,
+                "last_error": last_error,
+            }
+
+    def _ensure_worker_locked(self) -> None:
+        if self._worker is not None and self._worker.is_alive():
+            return
+        self._worker = threading.Thread(target=self._run, daemon=True)
+        self._worker.start()
+
+    def _run(self) -> None:
+        while True:
+            with self._lock:
+                if not self._queue:
+                    self._current_batch = None
+                    self._worker = None
+                    return
+                batch = self._queue.pop(0)
+                self._current_batch = batch
+                for item in batch["files"]:
+                    item["status"] = "processing"
+                    item["error"] = ""
+
+            try:
+                self.processor(self.root)
+            except Exception as exc:
+                with self._lock:
+                    batch["last_error"] = str(exc)
+                    for item in batch["files"]:
+                        item["status"] = "failed"
+                        item["error"] = str(exc)
+                    self._last_batch = batch
+                    self._current_batch = None
+                continue
+
+            with self._lock:
+                batch["last_error"] = ""
+                for item in batch["files"]:
+                    item["status"] = "completed"
+                    item["error"] = ""
+                self._last_batch = batch
+                self._current_batch = None
+
+    def _next_batch_id(self) -> str:
+        self._batch_counter += 1
+        return f"{time.strftime('%Y%m%d-%H%M%S')}-{self._batch_counter:02d}"
+
+
+def run_processing_pipeline(root: Path) -> None:
+    extract_pdfs.extract_all(root)
+    workflow.prepare_workspace(root)
+
+
+def papers_root_for(root: Path) -> Path:
+    return Path(root) / "workspace" / "papers"
+
+
+UPLOAD_MANAGER = UploadManager(ROOT)
 
 
 class ResearchWorkflowHandler(BaseHTTPRequestHandler):
@@ -44,6 +170,9 @@ class ResearchWorkflowHandler(BaseHTTPRequestHandler):
         if parsed.path == "/api/state":
             self._send_json(build_state_summary())
             return
+        if parsed.path == "/api/upload-status":
+            self._send_json(UPLOAD_MANAGER.snapshot())
+            return
         if parsed.path == "/api/document":
             query = parse_qs(parsed.query)
             name = query.get("name", [""])[0]
@@ -52,6 +181,13 @@ class ResearchWorkflowHandler(BaseHTTPRequestHandler):
                 self._send_json({"error": "document not found"}, status=404)
                 return
             self._send_json(document)
+            return
+        self._send_json({"error": "not found"}, status=404)
+
+    def do_POST(self) -> None:
+        parsed = urlparse(self.path)
+        if parsed.path == "/api/upload-papers":
+            self._handle_upload_papers()
             return
         self._send_json({"error": "not found"}, status=404)
 
@@ -76,6 +212,51 @@ class ResearchWorkflowHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
+
+    def _handle_upload_papers(self) -> None:
+        try:
+            files = parse_uploaded_files(self)
+            result = UPLOAD_MANAGER.enqueue_uploads(files)
+        except ValueError as exc:
+            self._send_json({"error": str(exc)}, status=400)
+            return
+        except OSError as exc:
+            self._send_json({"error": str(exc)}, status=500)
+            return
+
+        self._send_json(result, status=201)
+
+
+def parse_uploaded_files(handler: BaseHTTPRequestHandler) -> list[tuple[str, bytes]]:
+    content_type = handler.headers.get("Content-Type", "")
+    if "multipart/form-data" not in content_type:
+        raise ValueError("请求必须是 multipart/form-data。")
+
+    form = cgi.FieldStorage(
+        fp=handler.rfile,
+        headers=handler.headers,
+        environ={
+            "REQUEST_METHOD": "POST",
+            "CONTENT_TYPE": content_type,
+        },
+        keep_blank_values=True,
+    )
+    field = form["files"] if "files" in form else None
+    if field is None:
+        raise ValueError("没有收到上传文件。")
+
+    items = field if isinstance(field, list) else [field]
+    files = []
+    for item in items:
+        filename = getattr(item, "filename", "") or ""
+        if not filename:
+            continue
+        payload = item.file.read() if item.file else b""
+        files.append((filename, payload))
+
+    if not files:
+        raise ValueError("没有收到上传文件。")
+    return files
 
 
 def list_documents(doc_type: str | None = None) -> list[dict]:
