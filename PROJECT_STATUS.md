@@ -49,6 +49,7 @@ workspace/extracted/<paper-name>/
 - Standardized the direction template so control setup, success signals, and failure criteria are written explicitly.
 - Added a real-workspace smoke test to make sure the local panel can browse actual runtime outputs.
 - Added an optional MinerU extraction backend so PDF extraction can fall back from lightweight parsing to MinerU Docker.
+- Reorganized `workspace/outputs/` into grouped subdirectories with an `index.json` catalog and added a migration script for old flat outputs.
 - Added regression tests for direction scoring expectations, document filtering, and type-aware panel behavior.
 
 ## Verified
@@ -65,9 +66,9 @@ uv run python workflow.py prepare
 Current verification result:
 
 ```text
-25 unittest tests passed.
+25 unittest tests passed, including grouped-output and migration coverage.
 workflow.py prepare now returns no pending memory, card, collision, or direction work for the current two-paper workspace.
-The local web API sorts documents by paper_card -> collision -> direction, supports type filtering, the web panel supports grouped `all` browsing, direction templates now enforce clearer experiment structure, a smoke test checks real runtime outputs, and PDF extraction now supports `auto | lightweight | mineru` strategies.
+The local web API now prefers `workspace/outputs/index.json`, falls back to scanning grouped output directories when needed, supports type filtering, grouped `all` browsing, clearer direction templates, real-output smoke coverage, and PDF extraction strategies `auto | lightweight | mineru`.
 ```
 
 ## Next Steps

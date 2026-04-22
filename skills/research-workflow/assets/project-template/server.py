@@ -17,6 +17,11 @@ WEB_ROOT = ROOT / "web"
 OUTPUTS_ROOT = ROOT / "workspace" / "outputs"
 HOST = "127.0.0.1"
 PORT = 8765
+DOCUMENT_TYPE_ORDER = {
+    "paper_card": 0,
+    "collision": 1,
+    "direction": 2,
+}
 
 
 class ResearchWorkflowHandler(BaseHTTPRequestHandler):
@@ -32,7 +37,9 @@ class ResearchWorkflowHandler(BaseHTTPRequestHandler):
             self._serve_file(WEB_ROOT / "styles.css", "text/css; charset=utf-8")
             return
         if parsed.path == "/api/documents":
-            self._send_json(list_documents())
+            query = parse_qs(parsed.query)
+            doc_type = query.get("doc_type", query.get("type", [""]))[0] or None
+            self._send_json(list_documents(doc_type=doc_type))
             return
         if parsed.path == "/api/state":
             self._send_json(build_state_summary())
@@ -71,20 +78,39 @@ class ResearchWorkflowHandler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
 
-def list_documents() -> list[dict]:
+def list_documents(doc_type: str | None = None) -> list[dict]:
     OUTPUTS_ROOT.mkdir(parents=True, exist_ok=True)
-    documents = []
-    for path in sorted(OUTPUTS_ROOT.glob("*.md")):
-        content = path.read_text(encoding="utf-8", errors="replace")
-        metadata, body = split_frontmatter(content)
-        documents.append(
+    normalized_filter = None if doc_type in {None, "", "all"} else doc_type
+    scanned_documents = [
+        {
+            "name": item["name"],
+            "title": item.get("title") or item["name"],
+            "type": item.get("type") or "note",
+            "status": item.get("status") or "unknown",
+        }
+        for item in scan_output_documents_from_outputs_root(OUTPUTS_ROOT)
+    ]
+    indexed_documents = load_output_index_from_outputs_root(OUTPUTS_ROOT)
+    if indexed_documents and same_document_names(indexed_documents, scanned_documents):
+        documents = [
             {
-                "name": path.name,
-                "title": metadata.get("title") or infer_title(body) or path.stem,
-                "type": metadata.get("type") or "note",
-                "status": metadata.get("status") or "unknown",
+                "name": item["name"],
+                "title": item.get("title") or item["name"],
+                "type": item.get("type") or "note",
+                "status": item.get("status") or "unknown",
             }
+            for item in indexed_documents
+        ]
+    else:
+        documents = scanned_documents
+    if normalized_filter:
+        documents = [item for item in documents if item["type"] == normalized_filter]
+    documents.sort(
+        key=lambda item: (
+            DOCUMENT_TYPE_ORDER.get(item["type"], len(DOCUMENT_TYPE_ORDER)),
+            item["name"],
         )
+    )
     return documents
 
 
@@ -111,8 +137,8 @@ def build_state_summary() -> dict:
 def load_document(name: str) -> dict | None:
     if not name or "/" in name or "\\" in name:
         return None
-    path = OUTPUTS_ROOT / name
-    if not path.exists() or path.suffix != ".md":
+    path = resolve_document_name(name)
+    if path is None:
         return None
     content = path.read_text(encoding="utf-8", errors="replace")
     metadata, body = split_frontmatter(content)
@@ -123,6 +149,80 @@ def load_document(name: str) -> dict | None:
         "status": metadata.get("status") or "unknown",
         "metadata": metadata,
         "body": body.strip(),
+    }
+
+
+def resolve_document_name(name: str) -> Path | None:
+    indexed_documents = load_output_index_from_outputs_root(OUTPUTS_ROOT)
+    if indexed_documents:
+        for item in indexed_documents:
+            if item.get("name") != name:
+                continue
+            path = resolve_indexed_path(OUTPUTS_ROOT, item["path"])
+            if path.exists() and path.suffix == ".md":
+                return path
+
+    for item in scan_output_documents_from_outputs_root(OUTPUTS_ROOT):
+        if item.get("name") != name:
+            continue
+        path = resolve_indexed_path(OUTPUTS_ROOT, item["path"])
+        if path.exists() and path.suffix == ".md":
+            return path
+    return None
+
+
+def load_output_index_from_outputs_root(outputs_root: Path) -> list[dict] | None:
+    path = outputs_root / "index.json"
+    if not path.exists():
+        return None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(payload, dict) or not isinstance(payload.get("documents"), list):
+        return None
+    return [item for item in payload["documents"] if isinstance(item, dict)]
+
+
+def scan_output_documents_from_outputs_root(outputs_root: Path) -> list[dict]:
+    documents = []
+    for path in sorted(outputs_root.rglob("*.md")):
+        if path.name == ".gitkeep":
+            continue
+        content = path.read_text(encoding="utf-8", errors="replace")
+        metadata, body = split_frontmatter(content)
+        documents.append(
+            {
+                "name": path.name,
+                "path": relative_document_path(outputs_root, path),
+                "title": metadata.get("title") or infer_title(body) or path.stem,
+                "type": metadata.get("type") or "note",
+                "status": metadata.get("status") or "unknown",
+            }
+        )
+    documents.sort(
+        key=lambda item: (
+            DOCUMENT_TYPE_ORDER.get(item["type"], len(DOCUMENT_TYPE_ORDER)),
+            item["name"],
+        )
+    )
+    return documents
+
+
+def resolve_indexed_path(outputs_root: Path, relative_path: str) -> Path:
+    marker = "workspace/outputs/"
+    if relative_path.startswith(marker):
+        return outputs_root / relative_path[len(marker) :]
+    return outputs_root / relative_path
+
+
+def relative_document_path(outputs_root: Path, path: Path) -> str:
+    return f"workspace/outputs/{path.relative_to(outputs_root).as_posix()}"
+
+
+def same_document_names(indexed_documents: list[dict], scanned_documents: list[dict]) -> bool:
+    return {item.get("name") for item in indexed_documents} == {
+        item.get("name") for item in scanned_documents
     }
 
 

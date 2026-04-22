@@ -102,7 +102,9 @@ When `manifest.json` says the strategy is `mineru-docker-wrapper` or `auto-fallb
 Write Markdown files to:
 
 ```text
-workspace/outputs/
+workspace/outputs/paper-cards/
+workspace/outputs/collisions/
+workspace/outputs/directions/
 ```
 
 Write structured paper memory JSON to:
@@ -150,7 +152,7 @@ uv run python state.py mark-memory <paper_path> <memory_file>
 For each `papers_to_card` item, write:
 
 ```text
-001-paper-card-<short-name>.md
+workspace/outputs/paper-cards/001-paper-card-<short-name>.md
 ```
 
 Include only useful, concrete information:
@@ -177,7 +179,7 @@ uv run python state.py mark-card <paper_path> <output_file>
 For each `pending_collisions` pair, write:
 
 ```text
-002-collision-<paper-a>-<paper-b>.md
+workspace/outputs/collisions/002-collision-<paper-a>-<paper-b>.md
 ```
 
 Look for:
@@ -210,7 +212,7 @@ uv run python state.py mark-collision <paper_a> <paper_b> <output_file>
 For each `pending_directions` item, write:
 
 ```text
-004-direction-<short-name>.md
+workspace/outputs/directions/004-direction-<short-name>.md
 ```
 
 Use `templates/direction.md` and include:
@@ -238,6 +240,14 @@ uv run python state.py mark-direction <collision_key> <output_file>
 ## Optional Drafting
 
 Only write prototype or draft documents when a direction is clearly strong or the user asks for it.
+
+If files were written into old flat `workspace/outputs/*.md` locations, run:
+
+```bash
+uv run python migrate_outputs.py
+```
+
+to rebuild `workspace/outputs/index.json` and move files into the grouped output structure.
 
 ## Finish
 

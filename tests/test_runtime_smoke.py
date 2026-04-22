@@ -20,7 +20,7 @@ def load_server_module():
 class RuntimeSmokeTests(unittest.TestCase):
     def test_real_workspace_outputs_are_browsable(self):
         outputs_root = ROOT / "workspace" / "outputs"
-        if not list(outputs_root.glob("*.md")):
+        if not list(outputs_root.rglob("*.md")):
             self.skipTest("real workspace outputs are not present")
 
         server = load_server_module()

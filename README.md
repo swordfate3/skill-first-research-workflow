@@ -41,7 +41,7 @@ workspace/papers/
 
 看结果：
 
-- 文档：`workspace/outputs/`
+- 文档：`workspace/outputs/paper-cards/`、`workspace/outputs/collisions/`、`workspace/outputs/directions/`
 - 结构化 memory：`workspace/memory/papers/`
 - 网页：`uv run python server.py`
 
@@ -217,9 +217,15 @@ workspace/outputs/
 例如：
 
 ```text
-workspace/outputs/001-paper-card-xxx.md
-workspace/outputs/003-collision-xxx-yyy.md
-workspace/outputs/004-direction-xxx.md
+workspace/outputs/paper-cards/001-paper-card-xxx.md
+workspace/outputs/collisions/003-collision-xxx-yyy.md
+workspace/outputs/directions/004-direction-xxx.md
+```
+
+同时会维护：
+
+```text
+workspace/outputs/index.json
 ```
 
 ### 状态文件
@@ -263,7 +269,10 @@ http://127.0.0.1:8765
 
 Web 会读取当前工作目录里的：
 
-- `workspace/outputs/`
+- `workspace/outputs/index.json`
+- `workspace/outputs/paper-cards/`
+- `workspace/outputs/collisions/`
+- `workspace/outputs/directions/`
 - `workspace/state.json`
 
 现在已经支持：
