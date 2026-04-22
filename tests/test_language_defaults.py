@@ -31,6 +31,21 @@ class LanguageDefaultTests(unittest.TestCase):
                 content = (ROOT / "templates" / filename).read_text(encoding="utf-8")
                 self.assertIn(title, content)
 
+    def test_direction_template_and_skill_require_standardized_experiment_sections(self):
+        direction_template = (ROOT / "templates" / "direction.md").read_text(
+            encoding="utf-8"
+        )
+        skill = (ROOT / "skills" / "research-workflow" / "SKILL.md").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn("## 对照设计", direction_template)
+        self.assertIn("## 成功信号", direction_template)
+        self.assertIn("## 失败判据", direction_template)
+        self.assertIn("对照设计", skill)
+        self.assertIn("成功信号", skill)
+        self.assertIn("失败判据", skill)
+
 
 if __name__ == "__main__":
     unittest.main()

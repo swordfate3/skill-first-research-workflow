@@ -203,9 +203,14 @@ Use `templates/direction.md` and include:
 - 基于哪些碰撞
 - 技术路径
 - 第一个实验
+- 对照设计
+- 成功信号
+- 失败判据
 - 风险
 - 推荐分数
 - 术语对照
+
+Direction documents should read like something a researcher can execute next, not just a loose idea list. Make the first experiment concrete, keep the control setup explicit, and state what outcome would count as success or failure.
 
 After each direction document, immediately run:
 

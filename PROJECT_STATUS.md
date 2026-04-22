@@ -46,6 +46,7 @@ workspace/extracted/<paper-name>/
 - Added runtime paper memory records under `workspace/memory/papers/` and generated the first real direction draft under `workspace/outputs/`.
 - Upgraded the local web viewer so documents can be filtered by `paper_card`, `collision`, and `direction`.
 - Added an `all` filter and grouped document sections in the local web viewer so mixed output sets stay readable.
+- Standardized the direction template so control setup, success signals, and failure criteria are written explicitly.
 - Added regression tests for direction scoring expectations, document filtering, and type-aware panel behavior.
 
 ## Verified
@@ -62,16 +63,15 @@ uv run python workflow.py prepare
 Current verification result:
 
 ```text
-21 unittest tests passed.
+22 unittest tests passed.
 workflow.py prepare now returns no pending memory, card, collision, or direction work for the current two-paper workspace.
-The local web API sorts documents by paper_card -> collision -> direction, supports type filtering, and the web panel now supports grouped `all` browsing.
+The local web API sorts documents by paper_card -> collision -> direction, supports type filtering, the web panel supports grouped `all` browsing, and direction templates now enforce clearer experiment structure.
 ```
 
 ## Next Steps
 
-1. Tighten the direction template so recommended experiments, risks, and audit steps are more standardized.
-2. Add a tiny end-to-end smoke check for the web panel against real runtime outputs.
-3. Decide whether to add OCR/MinerU/Marker as an optional advanced extraction path for table-heavy PDFs.
+1. Add a tiny end-to-end smoke check for the web panel against real runtime outputs.
+2. Decide whether to add OCR/MinerU/Marker as an optional advanced extraction path for table-heavy PDFs.
 
 ## Useful Commands
 
