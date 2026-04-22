@@ -31,6 +31,31 @@ class WebAssetTests(unittest.TestCase):
         self.assertIn("document-group", app_js)
         self.assertIn("group-title", app_js)
 
+    def test_skill_template_web_assets_include_type_filter_controls(self):
+        root = (
+            Path(__file__).resolve().parents[1]
+            / "skills"
+            / "research-workflow"
+            / "assets"
+            / "project-template"
+            / "web"
+        )
+        app_js = (root / "app.js").read_text(encoding="utf-8")
+        index_html = (root / "index.html").read_text(encoding="utf-8")
+
+        self.assertIn('data-filter="all"', index_html)
+        self.assertIn('data-filter="paper_card"', index_html)
+        self.assertIn('data-filter="collision"', index_html)
+        self.assertIn('data-filter="direction"', index_html)
+        self.assertIn("/api/documents", app_js)
+        self.assertIn("type=", app_js)
+        self.assertIn("all", app_js)
+        self.assertIn("paper_card", app_js)
+        self.assertIn("collision", app_js)
+        self.assertIn("direction", app_js)
+        self.assertIn("document-group", app_js)
+        self.assertIn("group-title", app_js)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -3,15 +3,29 @@ const viewEl = document.querySelector("#documentView");
 const emptyEl = document.querySelector("#emptyState");
 const refreshButton = document.querySelector("#refreshButton");
 const stateEl = document.querySelector("#stateSummary");
+const filterButtons = [...document.querySelectorAll("[data-filter]")];
+const documentTypeOrder = ["paper_card", "collision", "direction"];
 
 let activeName = "";
+let activeFilter = "all";
 
 refreshButton.addEventListener("click", refresh);
+for (const button of filterButtons) {
+  button.addEventListener("click", () => {
+    const nextFilter = button.dataset.filter || "all";
+    if (nextFilter === activeFilter) {
+      return;
+    }
+    activeFilter = nextFilter;
+    activeName = "";
+    refresh();
+  });
+}
 
 refresh();
 
 async function refresh() {
-  await Promise.all([loadState(), loadDocuments()]);
+  await Promise.all([loadState(), loadDocuments(activeFilter)]);
 }
 
 async function loadState() {
@@ -28,35 +42,33 @@ async function loadState() {
 }
 
 async function loadDocuments() {
-  const response = await fetch("/api/documents");
+  const query = activeFilter ? `?type=${encodeURIComponent(activeFilter)}` : "";
+  const response = await fetch(`/api/documents${query}`);
   const documents = await response.json();
   listEl.innerHTML = "";
+  updateFilterButtons();
 
   if (!documents.length) {
     emptyEl.classList.remove("hidden");
     viewEl.classList.add("hidden");
+    activeName = "";
     return;
   }
 
-  for (const doc of documents) {
-    const button = globalThis.document.createElement("button");
-    button.className = "document-item";
-    if (doc.name === activeName) {
-      button.classList.add("active");
-    }
-    button.type = "button";
-    button.dataset.name = doc.name;
-    button.innerHTML = `
-      <span class="document-title">${escapeHtml(doc.title)}</span>
-      <span class="document-meta">${escapeHtml(doc.type)} · ${escapeHtml(doc.status)} · ${escapeHtml(doc.name)}</span>
-    `;
-    button.addEventListener("click", () => loadDocument(doc.name));
-    listEl.appendChild(button);
+  renderDocumentGroups(documents);
+
+  if (activeName && documents.some((doc) => doc.name === activeName)) {
+    await loadDocument(activeName);
+    return;
   }
 
   if (!activeName) {
     await loadDocument(documents[0].name);
+    return;
   }
+
+  activeName = documents[0].name;
+  await loadDocument(activeName);
 }
 
 async function loadDocument(name) {
@@ -78,6 +90,62 @@ async function loadDocument(name) {
   [...listEl.querySelectorAll(".document-item")].forEach((item) => {
     item.classList.toggle("active", item.dataset.name === name);
   });
+}
+
+function updateFilterButtons() {
+  for (const button of filterButtons) {
+    button.classList.toggle("active", button.dataset.filter === activeFilter);
+  }
+}
+
+function renderDocumentGroups(documents) {
+  const groupedDocuments = groupDocumentsByType(documents);
+
+  for (const [type, entries] of groupedDocuments) {
+    const groupEl = globalThis.document.createElement("section");
+    groupEl.className = "document-group";
+
+    const titleEl = globalThis.document.createElement("div");
+    titleEl.className = "group-title";
+    titleEl.textContent = `${type} (${entries.length})`;
+    groupEl.appendChild(titleEl);
+
+    for (const doc of entries) {
+      const button = globalThis.document.createElement("button");
+      button.className = "document-item";
+      if (doc.name === activeName) {
+        button.classList.add("active");
+      }
+      button.type = "button";
+      button.dataset.name = doc.name;
+      button.innerHTML = `
+        <span class="document-title">${escapeHtml(doc.title)}</span>
+        <span class="document-meta">${escapeHtml(doc.type)} · ${escapeHtml(doc.status)} · ${escapeHtml(doc.name)}</span>
+      `;
+      button.addEventListener("click", () => loadDocument(doc.name));
+      groupEl.appendChild(button);
+    }
+
+    listEl.appendChild(groupEl);
+  }
+}
+
+function groupDocumentsByType(documents) {
+  const groups = [];
+
+  for (const type of documentTypeOrder) {
+    const entries = documents.filter((doc) => doc.type === type);
+    if (entries.length) {
+      groups.push([type, entries]);
+    }
+  }
+
+  const otherEntries = documents.filter((doc) => !documentTypeOrder.includes(doc.type));
+  if (otherEntries.length) {
+    groups.push(["other", otherEntries]);
+  }
+
+  return groups;
 }
 
 function renderMarkdown(markdown) {
