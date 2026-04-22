@@ -2,77 +2,92 @@
 
 一个给大模型 / Agent 用的论文研究工作流 skill。
 
-它的目标很简单：
+它做的事很直接：
 
 ```text
-装 skill -> 建工作目录 -> 放论文 -> 调用 skill -> 看 memory / 碰撞 / 方向输出
+装 skill -> 放论文 -> 调用 skill -> 自动生成 memory / card / collision / direction -> Web 查看结果
 ```
 
 ---
 
-## 先理解两个目录
+## 30 秒上手
 
-这个项目有两个容易混淆的目录。
+先安装：
+
+```bash
+npx skills add swordfate3/skill-first-research-workflow@research-workflow
+```
+
+再准备一个工作目录：
+
+```bash
+mkdir ~/my-research
+cd ~/my-research
+python ~/.agents/skills/research-workflow/scripts/bootstrap_project.py --dest .
+uv sync
+```
+
+把论文放进：
+
+```text
+workspace/papers/
+```
+
+然后对 Agent 说：
+
+```text
+请使用 research-workflow skill 处理新论文。
+```
+
+看结果：
+
+- 文档：`workspace/outputs/`
+- 结构化 memory：`workspace/memory/papers/`
+- 网页：`uv run python server.py`
+
+---
+
+## 它怎么工作
+
+调用 skill 后，工作流会自动做这些事：
+
+1. 扫描 `workspace/papers/`
+2. 判断哪些论文是新的、哪些改过、哪些已处理
+3. 提取 PDF 正文 / 表格 / 公式 / 图表线索
+4. 生成结构化 `paper memory`
+5. 生成 `paper card`
+6. 生成 Top-K 高价值 `collision`
+7. 基于高分碰撞生成 `direction`
+8. 更新 `workspace/state.json`，避免重复处理
+
+PDF 提取策略：
+
+- 默认先走轻量提取：`pdftotext` / `pypdf`
+- 失败时自动回退到 MinerU
+- 也支持显式 `mineru` 提取策略
+
+---
+
+## 两个目录
 
 ### 1. skill 安装目录
 
-通过下面命令安装：
-
-```bash
-npx skills add <owner>/<repo>@research-workflow
-```
-
-安装后，skill 会出现在本地类似这样的位置：
+安装后大概会在这里：
 
 ```text
 ~/.agents/skills/research-workflow/
 ```
 
-这个目录里放的是：
+这里放的是：
 
 - `SKILL.md`
 - `scripts/bootstrap_project.py`
 - `assets/project-template/`
 - `agents/openai.yaml`
 
-它的作用是：
-
-**提供能力和模板**
-
-它不是你真正处理论文的目录。
+它只是能力包，不是你的研究项目目录。
 
 ### 2. 工作目录
-
-这是你自己创建的目录，比如：
-
-```bash
-mkdir ~/my-research
-cd ~/my-research
-```
-
-这个目录的作用是：
-
-**真正存放论文、提取结果、输出文档、状态文件**
-
-后续所有研究过程都发生在这里。
-
----
-
-## 整个使用流程
-
-## 第一步：安装 skill
-
-把 `<owner>/<repo>` 换成你的 GitHub 仓库：
-
-```bash
-npx skills add <owner>/<repo>@research-workflow
-```
-
-安装完成后，相当于你把“研究工作流能力包”装进本地了。
-
----
-
-## 第二步：创建工作目录
 
 比如：
 
@@ -81,39 +96,32 @@ mkdir ~/my-research
 cd ~/my-research
 ```
 
-这个目录就是你之后真正工作的地方。
+这里才是你真正放论文、跑流程、看输出的地方。
 
 ---
 
-## 第三步：把工作流模板释放到当前目录
+## 标准使用流程
 
-有两种方式。
+### 1. 安装 skill
 
-### 方式 A：让 Agent 自动做
-
-你直接对 Agent 说：
-
-```text
-请使用 research-workflow skill 处理我这里的新论文。
+```bash
+npx skills add swordfate3/skill-first-research-workflow@research-workflow
 ```
 
-如果当前目录还没有这些文件：
+### 2. 创建工作目录
 
-- `workflow.py`
-- `state.py`
-- `workspace/papers/`
+```bash
+mkdir ~/my-research
+cd ~/my-research
+```
 
-skill 会先自动初始化项目骨架。
-
-### 方式 B：你手动先初始化
-
-如果你想先自己准备好目录，可以手动运行：
+### 3. 初始化项目骨架
 
 ```bash
 python ~/.agents/skills/research-workflow/scripts/bootstrap_project.py --dest .
 ```
 
-执行完成后，当前目录会出现：
+初始化后，当前目录会有：
 
 ```text
 pyproject.toml
@@ -126,31 +134,21 @@ web/
 workspace/
 ```
 
-这时候，当前目录就已经是一个可运行的研究项目目录了。
-
----
-
-## 第四步：准备 Python 环境
-
-在工作目录里执行：
+### 4. 安装依赖
 
 ```bash
 uv sync
 ```
 
-这一步会为当前工作目录准备依赖和虚拟环境。
+### 5. 放论文
 
----
-
-## 第五步：放论文
-
-把论文放到：
+放到：
 
 ```text
 workspace/papers/
 ```
 
-支持的输入包括：
+支持：
 
 - PDF
 - Markdown
@@ -164,9 +162,7 @@ workspace/papers/paper-b.pdf
 workspace/papers/notes.md
 ```
 
----
-
-## 第六步：调用 skill 处理论文
+### 6. 调用 skill
 
 对 Agent 说：
 
@@ -174,35 +170,17 @@ workspace/papers/notes.md
 请使用 research-workflow skill 处理新论文。
 ```
 
-skill 会自动做这些事：
-
-1. 扫描 `workspace/papers/`
-2. 识别哪些论文是新的、哪些改过、哪些没变
-3. 对 PDF 做正文 / 表格 / 公式 / 图表线索提取
-4. 轻量提取失败时，自动回退到 MinerU（如果本机已可用）
-5. 为每篇论文生成结构化 paper memory
-6. 生成 paper card
-7. 只保留 Top-K 高价值创新碰撞
-8. 基于高分碰撞继续生成研究方向
-9. 更新状态文件，避免重复处理
-
 ---
 
-## 第七步：结果会写到哪里
-
-这是最关键的部分。
+## 输出写到哪里
 
 ### 原始论文
-
-放在：
 
 ```text
 workspace/papers/
 ```
 
 ### PDF 提取结果
-
-写到：
 
 ```text
 workspace/extracted/
@@ -218,32 +196,19 @@ workspace/extracted/paper-a/figures.md
 workspace/extracted/paper-a/manifest.json
 ```
 
-`manifest.json` 里会记录提取策略：
+`manifest.json` 会记录提取策略，比如：
 
 - `pdftotext-layout-or-pypdf-with-heuristics`
 - `auto-fallback-to-mineru`
 - `mineru-docker-wrapper`
 
-如果论文是扫描件、表格很多、公式很多，或者普通提取失败，工作流会优先尝试 MinerU。
-
-### 结构化 paper memory
-
-写到：
+### paper memory
 
 ```text
 workspace/memory/papers/
 ```
 
-例如：
-
-```text
-workspace/memory/papers/paper-a.json
-workspace/memory/papers/paper-b.json
-```
-
-### 最终输出文档
-
-写到：
+### 输出文档
 
 ```text
 workspace/outputs/
@@ -253,73 +218,36 @@ workspace/outputs/
 
 ```text
 workspace/outputs/001-paper-card-xxx.md
-workspace/outputs/002-paper-card-yyy.md
 workspace/outputs/003-collision-xxx-yyy.md
 workspace/outputs/004-direction-xxx.md
 ```
 
 ### 状态文件
 
-写到：
-
 ```text
 workspace/state.json
 ```
-
-这个文件用来记录：
-
-- 哪些论文处理过
-- 哪些论文内容发生过变化
-- 哪些论文已经生成 memory / card
-- 哪些组合已经做过碰撞
-- 哪些碰撞已经升格成方向
-
----
-
-## 重点结论
-
-**释放完工作目录之后，skill 后续产生的文件，都会写到这个工作目录。**
-
-不会写到：
-
-```text
-~/.agents/skills/research-workflow/
-```
-
-而是会写到你自己的项目目录，比如：
-
-```text
-~/my-research/
-```
-
-所以：
-
-- skill 安装目录 = 模板和能力包
-- 工作目录 = 真实研究现场
 
 ---
 
 ## 第二次怎么继续用
 
-以后你只要重复这两步：
+以后只要重复两步：
 
 1. 往 `workspace/papers/` 里加新论文
 2. 再调用一次 `research-workflow` skill
 
-它会自动判断：
+工作流会自动判断：
 
-- 哪些是新论文
-- 哪些论文还没有 memory
-- 哪些论文已经处理过
+- 哪些论文是新的
 - 哪些论文变了
-- 哪些碰撞组合已经存在
-- 哪些高分碰撞还没生成方向
-
-所以你不需要手动管理重复。
+- 哪些还没生成 memory / card
+- 哪些 collision 已做过
+- 哪些 direction 还没生成
 
 ---
 
-## Web 怎么用
+## Web 怎么看
 
 在工作目录里运行：
 
@@ -333,78 +261,40 @@ uv run python server.py
 http://127.0.0.1:8765
 ```
 
-网页读取的是当前工作目录里的这些内容：
+Web 会读取当前工作目录里的：
 
 - `workspace/outputs/`
 - `workspace/state.json`
 
-所以网页展示的是这一次工作目录里的研究结果，不是 skill 安装目录里的内容。状态面板也会显示：
+现在已经支持：
 
-- 论文数
-- 已建 memory 数
-- 已碰撞组合数
-- 已生成方向数
-- 待生成方向数
-
----
-
-## 最推荐的完整操作顺序
-
-你可以直接照着下面做：
-
-```bash
-npx skills add <owner>/<repo>@research-workflow
-
-mkdir ~/my-research
-cd ~/my-research
-
-python ~/.agents/skills/research-workflow/scripts/bootstrap_project.py --dest .
-uv sync
-```
-
-然后把论文放进：
-
-```text
-workspace/papers/
-```
-
-再对 Agent 说：
-
-```text
-请使用 research-workflow skill 处理新论文。
-```
-
-查看结果：
-
-- 结构化 memory：`workspace/memory/papers/`
-- Markdown 文档：`workspace/outputs/`
-- 本地网页：`uv run python server.py`
+- `all` 视图
+- 按 `paper_card / collision / direction` 分组浏览
+- 查看真实运行产物
 
 ---
 
 ## 常见问题
 
-### 可以直接进入 `~/.agents/skills/research-workflow/` 运行吗？
+### 可以直接在 `~/.agents/skills/research-workflow/` 里运行吗？
 
 不推荐。
 
-这个目录是 skill 安装目录，不是正式工作目录。  
-虽然模板文件在里面，但你的论文、输出、状态都不应该直接堆在 skill 安装目录里。
+这个目录是 skill 安装目录，不是正式工作目录。
 
-正确做法是：
+### 输出会写回 skill 安装目录吗？
 
-1. 安装 skill
-2. 在你自己的目录里 bootstrap
-3. 在你自己的目录里运行 workflow 和 web
+不会。
 
-### 第一次没有 `workspace/papers/` 怎么办？
+输出会写到你自己的工作目录，比如：
 
-没关系。  
-第一次 bootstrap 后会自动创建。
+```text
+~/my-research/
+```
 
 ### 输出是什么语言？
 
-默认是中文。  
+默认中文输出。  
 关键英文术语会保留原文，并附术语对照。
 
 ---
@@ -430,13 +320,4 @@ uv run python -m unittest discover -s tests -v
 skills/research-workflow/
 ```
 
-其中：
-
-```text
-SKILL.md
-scripts/bootstrap_project.py
-assets/project-template/
-agents/openai.yaml
-```
-
-也就是说，安装的是 `research-workflow` 这个 skill，而不是仓库根目录本身。
+也就是说，安装的是 `research-workflow` 这个 skill，不是仓库根目录本身。
