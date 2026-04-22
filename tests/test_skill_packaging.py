@@ -18,6 +18,15 @@ def load_bootstrap_module():
     return module
 
 
+def load_setup_module():
+    module_path = ROOT / "skills" / "research-workflow" / "scripts" / "setup_project.py"
+    spec = importlib.util.spec_from_file_location("research_workflow_setup", module_path)
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
+
+
 class SkillPackagingTests(unittest.TestCase):
     def test_skill_bundle_contains_project_template_files(self):
         template_root = (
@@ -50,6 +59,8 @@ class SkillPackagingTests(unittest.TestCase):
             "workspace/memory/papers/.gitkeep",
         ]
 
+        self.assertTrue((ROOT / "skills" / "research-workflow" / "scripts" / "setup_project.py").exists())
+
         for relative in expected_files:
             with self.subTest(relative=relative):
                 self.assertTrue((template_root / relative).exists())
@@ -78,6 +89,14 @@ class SkillPackagingTests(unittest.TestCase):
 
         self.assertEqual(result["status"], "conflict")
         self.assertIn("workflow.py", result["conflicts"])
+
+    def test_setup_project_requires_destination_when_current_dir_is_not_initialized(self):
+        setup = load_setup_module()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = setup.setup_project(Path(tmpdir), dest=None)
+
+        self.assertEqual(result["status"], "needs_destination")
 
 
 if __name__ == "__main__":

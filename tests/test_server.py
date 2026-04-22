@@ -264,6 +264,19 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(loaded["type"], "direction")
         self.assertEqual(loaded["name"], "c-direction.md")
 
+    def test_build_state_summary_includes_project_root(self):
+        server = load_server_module()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            outputs_root = root / "workspace" / "outputs"
+            outputs_root.mkdir(parents=True)
+
+            with patch.object(server, "ROOT", root), patch.object(server, "OUTPUTS_ROOT", outputs_root):
+                summary = server.build_state_summary()
+
+        self.assertEqual(summary["project_root"], str(root.resolve()))
+
     def test_upload_papers_saves_files_and_reports_batch_status(self):
         server = load_server_module()
 

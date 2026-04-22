@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import cgi
 import json
 import sys
@@ -21,8 +22,8 @@ from state import load_state, scan_workspace
 WEB_ROOT = ROOT / "web"
 OUTPUTS_ROOT = ROOT / "workspace" / "outputs"
 PAPERS_ROOT = ROOT / "workspace" / "papers"
-HOST = "127.0.0.1"
-PORT = 8765
+DEFAULT_HOST = "127.0.0.1"
+DEFAULT_PORT = 8765
 DOCUMENT_TYPE_ORDER = {
     "paper_card": 0,
     "collision": 1,
@@ -299,6 +300,7 @@ def build_state_summary() -> dict:
     scan = scan_workspace(ROOT)
     state = load_state(ROOT)
     return {
+        "project_root": str(ROOT.resolve()),
         "paper_count": len(state.get("papers", {})),
         "memory_count": sum(
             1
@@ -435,9 +437,14 @@ def infer_title(body: str) -> str:
     return ""
 
 
-def main() -> None:
-    server = ThreadingHTTPServer((HOST, PORT), ResearchWorkflowHandler)
-    print(f"Serving skill-first research workflow at http://{HOST}:{PORT}")
+def main(argv: list[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(prog="uv run python server.py")
+    parser.add_argument("--host", default=DEFAULT_HOST, help="bind host")
+    parser.add_argument("--port", type=int, default=DEFAULT_PORT, help="bind port")
+    args = parser.parse_args(argv)
+
+    server = ThreadingHTTPServer((args.host, args.port), ResearchWorkflowHandler)
+    print(f"Serving skill-first research workflow at http://{args.host}:{args.port}")
     print(f"Reading markdown outputs from {OUTPUTS_ROOT}")
     try:
         server.serve_forever()

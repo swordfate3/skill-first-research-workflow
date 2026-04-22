@@ -9,7 +9,7 @@ Run the workflow automatically. The user should only need to add papers to `work
 
 If the local web panel is running via `uv run python server.py`, it can also accept multi-PDF uploads and save them into `workspace/papers/` automatically.
 
-Do not ask the user to run setup commands unless a command fails or a PDF needs OCR/manual text.
+Do not ask the user to run setup commands unless setup fails, `uv` is missing, or a PDF needs OCR/manual text.
 
 ## PDF Extraction Mode
 
@@ -26,17 +26,51 @@ Do not ask the user to run setup commands unless a command fails or a PDF needs 
 
 The workflow normalizes MinerU output back into `workspace/extracted/<paper>/`, so later paper memory, card, collision, and direction steps should keep reading the same extracted files.
 
-## Bootstrap
+## Setup First
 
-This installed skill includes a full project template under `assets/project-template/`.
+This installed skill includes a full project template under `assets/project-template/` and a setup helper under `scripts/setup_project.py`.
 
-If the current working directory does not already contain `workflow.py`, `state.py`, and `workspace/papers/`, first run the bundled bootstrap script from this skill directory:
+Always start by running the setup helper before `workflow.py prepare`.
+
+### If the current directory is already a project root
+
+Run:
 
 ```bash
-python scripts/bootstrap_project.py --dest .
+python scripts/setup_project.py
 ```
 
-After bootstrap, the current directory becomes a runnable research workflow project.
+### If the current directory is not yet a project root
+
+Do **not** silently release the template into the current directory.
+
+If the user has not explicitly told you where the project should be released, stop and ask:
+
+```text
+你要把 research-workflow 项目释放到哪个目录？
+```
+
+Once the user gives a destination path, run:
+
+```bash
+python scripts/setup_project.py --dest <user-provided-path>
+```
+
+Interpret the returned JSON:
+
+- `needs_destination`: ask the user for the destination path
+- `needs_uv`: tell the user `uv` must be installed before continuing
+- `bootstrap_conflict`: tell the user the destination already contains conflicting files
+- `web_failed`: tell the user setup reached the web startup step but the local web server could not be started
+- `ready`: continue into the workflow using the returned `project_root`
+
+The setup helper will:
+
+- bootstrap the project when needed
+- check for `uv`
+- run `uv sync`
+- reuse an existing local web server for the same project when possible
+- otherwise start a new local web server and return its URL
 
 ## Language
 
@@ -54,13 +88,7 @@ Every paper card and collision document should include a short `## 术语对照`
 
 ## Start Here
 
-If `pyproject.toml` exists but dependencies are not ready yet, run:
-
-```bash
-uv sync
-```
-
-Then immediately run:
+After setup returns `ready`, switch to the returned `project_root` if needed, then run:
 
 ```bash
 uv run python workflow.py prepare
@@ -74,6 +102,7 @@ Use the JSON result:
 - `pending_directions`: draft direction documents for these high-priority collisions.
 - `pdf_extraction.failed`: tell the user these PDFs need OCR or manual text.
 - If `next_actions` says no work is needed, stop and report that nothing new was found.
+- If setup returned a web URL, include it in the reply so the user can open the local panel immediately.
 
 ## Inputs
 

@@ -23,9 +23,23 @@ npx skills add swordfate3/skill-first-research-workflow@research-workflow
 ```bash
 mkdir ~/my-research
 cd ~/my-research
-python ~/.agents/skills/research-workflow/scripts/bootstrap_project.py --dest .
-uv sync
 ```
+
+第一次调用 skill 时，如果当前目录还不是项目目录，**会先询问你要把项目释放到哪里**。  
+这个目录必须由你明确指定，不会默认偷偷释放到当前目录。
+
+也可以手动先完成 setup：
+
+```bash
+python ~/.agents/skills/research-workflow/scripts/setup_project.py --dest ~/my-research
+```
+
+setup 会自动：
+
+- 释放项目模板
+- 检查 `uv`
+- 运行 `uv sync`
+- 复用或启动本地 Web
 
 把论文放进：
 
@@ -142,6 +156,14 @@ workspace/
 uv sync
 ```
 
+如果你想走更省事的方式，也可以直接用：
+
+```bash
+python ~/.agents/skills/research-workflow/scripts/setup_project.py --dest .
+```
+
+它会把 bootstrap、`uv` 检查、`uv sync` 和 Web 启动一起做完。
+
 ### 5. 放论文
 
 放到：
@@ -182,6 +204,8 @@ http://127.0.0.1:8765
 - 保存到 `workspace/papers/`
 - 同名覆盖
 - 上传后自动触发处理
+
+如果你是用 `setup_project.py` 做的初始化，它会自动复用已有 Web，或帮你启动一个新的 Web，并返回访问地址。
 
 ### 6. 调用 skill
 

@@ -53,6 +53,8 @@ workspace/extracted/<paper-name>/
 - Added regression tests for direction scoring expectations, document filtering, and type-aware panel behavior.
 - Added Web-side multi-PDF upload so new papers can be saved into `workspace/papers/` and automatically trigger extraction plus workflow preparation.
 - Synced the upload-enabled server and front-end into the shipped skill template.
+- Added a dedicated setup design for first-run onboarding: explicit destination selection, `uv` detection, and automatic Web reuse/startup.
+- Implemented a first-run setup helper that requires an explicit destination when the current directory is not initialized, runs `uv sync`, and reuses or starts the local Web panel.
 
 ## Verified
 
@@ -68,9 +70,9 @@ uv run python workflow.py prepare
 Current verification result:
 
 ```text
-35 unittest tests passed, including grouped-output, upload workflow, and migration coverage.
+40 unittest tests passed, including grouped-output, upload workflow, setup onboarding, and migration coverage.
 workflow.py prepare now returns no pending memory, card, collision, or direction work for the current two-paper workspace.
-The local web API now prefers `workspace/outputs/index.json`, falls back to scanning grouped output directories when needed, supports type filtering, grouped `all` browsing, upload status polling, auto-saving PDF uploads into `workspace/papers/`, clearer direction templates, real-output smoke coverage, and PDF extraction strategies `auto | lightweight | mineru`.
+The local web API now prefers `workspace/outputs/index.json`, falls back to scanning grouped output directories when needed, supports type filtering, grouped `all` browsing, upload status polling, auto-saving PDF uploads into `workspace/papers/`, setup-time `project_root` detection, clearer direction templates, real-output smoke coverage, and PDF extraction strategies `auto | lightweight | mineru`.
 ```
 
 ## Next Steps
