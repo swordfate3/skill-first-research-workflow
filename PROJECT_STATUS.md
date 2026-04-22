@@ -48,6 +48,7 @@ workspace/extracted/<paper-name>/
 - Added an `all` filter and grouped document sections in the local web viewer so mixed output sets stay readable.
 - Standardized the direction template so control setup, success signals, and failure criteria are written explicitly.
 - Added a real-workspace smoke test to make sure the local panel can browse actual runtime outputs.
+- Added an optional MinerU extraction backend so PDF extraction can fall back from lightweight parsing to MinerU Docker.
 - Added regression tests for direction scoring expectations, document filtering, and type-aware panel behavior.
 
 ## Verified
@@ -64,14 +65,14 @@ uv run python workflow.py prepare
 Current verification result:
 
 ```text
-23 unittest tests passed.
+25 unittest tests passed.
 workflow.py prepare now returns no pending memory, card, collision, or direction work for the current two-paper workspace.
-The local web API sorts documents by paper_card -> collision -> direction, supports type filtering, the web panel supports grouped `all` browsing, direction templates now enforce clearer experiment structure, and a smoke test checks real runtime outputs.
+The local web API sorts documents by paper_card -> collision -> direction, supports type filtering, the web panel supports grouped `all` browsing, direction templates now enforce clearer experiment structure, a smoke test checks real runtime outputs, and PDF extraction now supports `auto | lightweight | mineru` strategies.
 ```
 
 ## Next Steps
 
-1. Decide whether to add OCR/MinerU/Marker as an optional advanced extraction path for table-heavy PDFs.
+1. Decide whether to add a richer auto-detection heuristic for “table-heavy / formula-heavy / scanned PDF” instead of only failing over to MinerU after lightweight extraction fails.
 
 ## Useful Commands
 

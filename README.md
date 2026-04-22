@@ -179,11 +179,12 @@ skill 会自动做这些事：
 1. 扫描 `workspace/papers/`
 2. 识别哪些论文是新的、哪些改过、哪些没变
 3. 对 PDF 做正文 / 表格 / 公式 / 图表线索提取
-4. 为每篇论文生成结构化 paper memory
-5. 生成 paper card
-6. 只保留 Top-K 高价值创新碰撞
-7. 基于高分碰撞继续生成研究方向
-8. 更新状态文件，避免重复处理
+4. 轻量提取失败时，自动回退到 MinerU（如果本机已可用）
+5. 为每篇论文生成结构化 paper memory
+6. 生成 paper card
+7. 只保留 Top-K 高价值创新碰撞
+8. 基于高分碰撞继续生成研究方向
+9. 更新状态文件，避免重复处理
 
 ---
 
@@ -216,6 +217,14 @@ workspace/extracted/paper-a/equations.md
 workspace/extracted/paper-a/figures.md
 workspace/extracted/paper-a/manifest.json
 ```
+
+`manifest.json` 里会记录提取策略：
+
+- `pdftotext-layout-or-pypdf-with-heuristics`
+- `auto-fallback-to-mineru`
+- `mineru-docker-wrapper`
+
+如果论文是扫描件、表格很多、公式很多，或者普通提取失败，工作流会优先尝试 MinerU。
 
 ### 结构化 paper memory
 

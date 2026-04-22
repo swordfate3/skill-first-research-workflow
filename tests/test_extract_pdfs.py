@@ -93,6 +93,85 @@ class ExtractPdfsTests(unittest.TestCase):
         self.assertEqual(second["changed"], ["paper-a.pdf"])
         self.assertIn("second extraction", text)
 
+    def test_extract_all_auto_falls_back_to_mineru_when_lightweight_fails(self):
+        extract_pdfs = load_extract_module()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            papers = root / "workspace" / "papers"
+            papers.mkdir(parents=True)
+            pdf = papers / "paper-a.pdf"
+            pdf.write_bytes(b"fake pdf bytes")
+
+            def failing_extractor(path: Path) -> str:
+                del path
+                raise RuntimeError("lightweight failed")
+
+            def fake_mineru_runner(path: Path, output_dir: Path) -> None:
+                del path
+                nested = output_dir / "mineru"
+                nested.mkdir(parents=True, exist_ok=True)
+                (nested / "content.md").write_text(
+                    "\n".join(
+                        [
+                            "# MinerU Output",
+                            "Table 1: Main results",
+                            "Ours 0.92 0.88",
+                            "Equation (1): y = x + 1",
+                            "Figure 2: Overall pipeline",
+                        ]
+                    ),
+                    encoding="utf-8",
+                )
+
+            summary = extract_pdfs.extract_all(
+                root,
+                extractor=failing_extractor,
+                strategy="auto",
+                mineru_runner=fake_mineru_runner,
+            )
+
+            extracted = root / "workspace" / "extracted" / "paper-a"
+            manifest = json.loads((extracted / "manifest.json").read_text(encoding="utf-8"))
+            text_doc = (extracted / "text.md").read_text(encoding="utf-8")
+            tables_doc = (extracted / "tables.md").read_text(encoding="utf-8")
+
+        self.assertEqual(summary["extracted"], ["paper-a.pdf"])
+        self.assertEqual(manifest["strategy"], "auto-fallback-to-mineru")
+        self.assertIn("MinerU Output", text_doc)
+        self.assertIn("Table 1: Main results", tables_doc)
+
+    def test_extract_all_can_use_explicit_mineru_strategy(self):
+        extract_pdfs = load_extract_module()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            papers = root / "workspace" / "papers"
+            papers.mkdir(parents=True)
+            pdf = papers / "paper-a.pdf"
+            pdf.write_bytes(b"fake pdf bytes")
+
+            def fake_mineru_runner(path: Path, output_dir: Path) -> None:
+                del path
+                (output_dir / "result.md").write_text(
+                    "Equation (2): loss = ce + reg",
+                    encoding="utf-8",
+                )
+
+            summary = extract_pdfs.extract_all(
+                root,
+                strategy="mineru",
+                mineru_runner=fake_mineru_runner,
+            )
+
+            extracted = root / "workspace" / "extracted" / "paper-a"
+            manifest = json.loads((extracted / "manifest.json").read_text(encoding="utf-8"))
+            equations_doc = (extracted / "equations.md").read_text(encoding="utf-8")
+
+        self.assertEqual(summary["extracted"], ["paper-a.pdf"])
+        self.assertEqual(manifest["strategy"], "mineru-docker-wrapper")
+        self.assertIn("loss = ce + reg", equations_doc)
+
 
 if __name__ == "__main__":
     unittest.main()

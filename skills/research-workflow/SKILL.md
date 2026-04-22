@@ -9,6 +9,21 @@ Run the workflow automatically. The user should only need to add papers to `work
 
 Do not ask the user to run setup commands unless a command fails or a PDF needs OCR/manual text.
 
+## PDF Extraction Mode
+
+默认先使用轻量提取：
+
+- `pdftotext -layout`
+- 失败时回退到 `pypdf`
+
+如果轻量提取失败，或用户明确说这篇论文是扫描件 / 表格很重要 / 公式很重要，那么改用 MinerU Docker wrapper：
+
+```bash
+/home/fate/.agents/skills/mineru-doc-to-md/scripts/mineru_to_md.sh <pdf> --output <dir>
+```
+
+The workflow normalizes MinerU output back into `workspace/extracted/<paper>/`, so later paper memory, card, collision, and direction steps should keep reading the same extracted files.
+
 ## Bootstrap
 
 This installed skill includes a full project template under `assets/project-template/`.
@@ -79,6 +94,8 @@ workspace/extracted/<paper-name>/manifest.json
 ```
 
 `tables.md`, `equations.md`, and `figures.md` are best-effort extraction notes. Mention uncertainty when using them.
+
+When `manifest.json` says the strategy is `mineru-docker-wrapper` or `auto-fallback-to-mineru`, prefer those extracted files over guessing from raw PDF text.
 
 ## Outputs
 

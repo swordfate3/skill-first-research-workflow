@@ -5,6 +5,7 @@ import hashlib
 import json
 import re
 import subprocess
+import tempfile
 from pathlib import Path
 from typing import Callable, TextIO
 
@@ -13,16 +14,22 @@ ROOT = Path(__file__).resolve().parent
 WORKSPACE = "workspace"
 PAPERS = "papers"
 EXTRACTED = "extracted"
+DEFAULT_STRATEGY = "auto"
+MINERU_WRAPPER = Path("/home/fate/.agents/skills/mineru-doc-to-md/scripts/mineru_to_md.sh")
 
 Extractor = Callable[[Path], str]
+MineruRunner = Callable[[Path, Path], None]
 
 
 def extract_all(
     root: Path = ROOT,
     extractor: Extractor | None = None,
     force: bool = False,
+    strategy: str = DEFAULT_STRATEGY,
+    mineru_runner: MineruRunner | None = None,
 ) -> dict:
     root = Path(root)
+    strategy = normalize_strategy(strategy)
     summary = {"extracted": [], "changed": [], "skipped": [], "failed": []}
 
     for pdf in discover_pdfs(root):
@@ -37,8 +44,43 @@ def extract_all(
 
         was_extracted = bool(manifest)
         try:
-            text = extractor(pdf) if extractor is not None else extract_pdf_text(pdf)
-            write_extracted_documents(output_dir, relative_path, digest, text)
+            if strategy == "lightweight":
+                text = extractor(pdf) if extractor is not None else extract_pdf_text(pdf)
+                write_extracted_documents(
+                    output_dir,
+                    relative_path,
+                    digest,
+                    text,
+                    strategy_name="pdftotext-layout-or-pypdf-with-heuristics",
+                )
+            elif strategy == "mineru":
+                write_mineru_documents(
+                    output_dir,
+                    relative_path,
+                    digest,
+                    pdf,
+                    runner=mineru_runner,
+                    strategy_name="mineru-docker-wrapper",
+                )
+            else:
+                try:
+                    text = extractor(pdf) if extractor is not None else extract_pdf_text(pdf)
+                    write_extracted_documents(
+                        output_dir,
+                        relative_path,
+                        digest,
+                        text,
+                        strategy_name="pdftotext-layout-or-pypdf-with-heuristics",
+                    )
+                except Exception:
+                    write_mineru_documents(
+                        output_dir,
+                        relative_path,
+                        digest,
+                        pdf,
+                        runner=mineru_runner,
+                        strategy_name="auto-fallback-to-mineru",
+                    )
         except Exception as exc:  # pragma: no cover - exercised by real PDF tools.
             write_failure_manifest(output_dir, relative_path, digest, exc)
             summary["failed"].append(relative_path)
@@ -87,11 +129,117 @@ def extract_with_pypdf(pdf: Path) -> str:
     return "\n".join(pages).strip()
 
 
+def write_mineru_documents(
+    output_dir: Path,
+    relative_path: str,
+    digest: str,
+    pdf: Path,
+    runner: MineruRunner | None,
+    strategy_name: str,
+) -> None:
+    mineru_payload = extract_with_mineru(pdf, runner=runner)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    files = {
+        "text.md": render_text(relative_path, mineru_payload["text"]),
+        "tables.md": render_section(
+            "Extracted Tables",
+            relative_path,
+            mineru_payload["table_lines"],
+            "MinerU did not emit obvious table lines. Check the source PDF if results or baselines matter.",
+        ),
+        "equations.md": render_section(
+            "Extracted Equations",
+            relative_path,
+            mineru_payload["equation_lines"],
+            "MinerU did not emit obvious equation lines. Check the source PDF if formulas drive the method.",
+        ),
+        "figures.md": render_section(
+            "Extracted Figures",
+            relative_path,
+            mineru_payload["figure_lines"],
+            "MinerU did not emit figure caption lines. Check the source PDF if diagrams explain the method.",
+        ),
+    }
+    for name, content in files.items():
+        (output_dir / name).write_text(content, encoding="utf-8")
+
+    manifest = {
+        "source": relative_path,
+        "source_hash": digest,
+        "status": "extracted",
+        "strategy": strategy_name,
+        "files": sorted(files),
+        "uncertainty": {
+            "tables": "MinerU markdown was normalized back into workflow table notes; verify important numeric cells.",
+            "equations": "MinerU markdown may still lose symbols or layout; verify formulas that matter.",
+            "figures": "Figure captions are best-effort; image semantics are still not fully interpreted.",
+        },
+        "mineru_artifacts": mineru_payload["artifact_files"],
+    }
+    (output_dir / "manifest.json").write_text(
+        json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
+def extract_with_mineru(pdf: Path, runner: MineruRunner | None = None) -> dict:
+    with tempfile.TemporaryDirectory(prefix="mineru-extract-") as tmpdir:
+        output_dir = Path(tmpdir)
+        effective_runner = runner or run_mineru_wrapper
+        effective_runner(pdf, output_dir)
+        return collect_mineru_output(output_dir)
+
+
+def run_mineru_wrapper(pdf: Path, output_dir: Path) -> None:
+    if not MINERU_WRAPPER.exists():
+        raise RuntimeError(f"MinerU wrapper not found: {MINERU_WRAPPER}")
+
+    result = subprocess.run(
+        [str(MINERU_WRAPPER), str(pdf), "--output", str(output_dir)],
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=1800,
+    )
+    if result.returncode != 0:
+        message = result.stderr.strip() or result.stdout.strip() or "MinerU wrapper failed"
+        raise RuntimeError(message)
+
+
+def collect_mineru_output(output_dir: Path) -> dict:
+    artifact_files = sorted(
+        path.relative_to(output_dir).as_posix()
+        for path in output_dir.rglob("*")
+        if path.is_file()
+    )
+    markdown_files = sorted(output_dir.rglob("*.md"))
+    if not markdown_files:
+        raise RuntimeError("MinerU completed without Markdown output.")
+
+    chunks = []
+    for path in markdown_files:
+        text = path.read_text(encoding="utf-8", errors="replace").strip()
+        if text:
+            chunks.append(text)
+    combined_text = "\n\n".join(chunks).strip()
+    if not combined_text:
+        raise RuntimeError("MinerU Markdown output is empty.")
+
+    return {
+        "text": combined_text,
+        "table_lines": extract_table_lines(combined_text),
+        "equation_lines": extract_equation_lines(combined_text),
+        "figure_lines": extract_figure_lines(combined_text),
+        "artifact_files": artifact_files,
+    }
+
+
 def write_extracted_documents(
     output_dir: Path,
     relative_path: str,
     digest: str,
     text: str,
+    strategy_name: str = "pdftotext-layout-or-pypdf-with-heuristics",
 ) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     table_lines = extract_table_lines(text)
@@ -126,7 +274,7 @@ def write_extracted_documents(
         "source": relative_path,
         "source_hash": digest,
         "status": "extracted",
-        "strategy": "pdftotext-layout-or-pypdf-with-heuristics",
+        "strategy": strategy_name,
         "files": sorted(files),
         "uncertainty": {
             "tables": "best-effort text/layout heuristic; verify important numeric results",
@@ -268,13 +416,26 @@ def hash_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def normalize_strategy(strategy: str) -> str:
+    value = (strategy or DEFAULT_STRATEGY).strip().lower()
+    if value not in {"auto", "lightweight", "mineru"}:
+        raise ValueError(f"Unsupported extraction strategy: {strategy}")
+    return value
+
+
 def main(argv: list[str] | None = None, stdout: TextIO | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python extract_pdfs.py")
     parser.add_argument("--root", default=str(ROOT), help="project root")
     parser.add_argument("--force", action="store_true", help="extract even when PDF hash is unchanged")
+    parser.add_argument(
+        "--strategy",
+        default=DEFAULT_STRATEGY,
+        choices=["auto", "lightweight", "mineru"],
+        help="PDF extraction strategy",
+    )
     args = parser.parse_args(argv)
 
-    payload = extract_all(Path(args.root), force=args.force)
+    payload = extract_all(Path(args.root), force=args.force, strategy=args.strategy)
     text = json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True)
     if stdout is None:
         print(text)
