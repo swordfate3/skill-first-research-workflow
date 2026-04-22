@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 2026-04-21
+Last updated: 2026-04-22
 
 ## Current Direction
 
@@ -45,6 +45,7 @@ workspace/extracted/<paper-name>/
 - Ran the current two real AES papers through the full `memory -> paper card -> collision -> direction` chain.
 - Added runtime paper memory records under `workspace/memory/papers/` and generated the first real direction draft under `workspace/outputs/`.
 - Upgraded the local web viewer so documents can be filtered by `paper_card`, `collision`, and `direction`.
+- Added an `all` filter and grouped document sections in the local web viewer so mixed output sets stay readable.
 - Added regression tests for direction scoring expectations, document filtering, and type-aware panel behavior.
 
 ## Verified
@@ -61,17 +62,16 @@ uv run python workflow.py prepare
 Current verification result:
 
 ```text
-13 unittest tests passed.
+21 unittest tests passed.
 workflow.py prepare now returns no pending memory, card, collision, or direction work for the current two-paper workspace.
-The local web API sorts documents by paper_card -> collision -> direction and supports type filtering.
+The local web API sorts documents by paper_card -> collision -> direction, supports type filtering, and the web panel now supports grouped `all` browsing.
 ```
 
 ## Next Steps
 
-1. Add a lightweight "all" filter and richer document grouping in the web panel if browsing starts to feel cramped.
-2. Tighten the direction template so recommended experiments, risks, and audit steps are more standardized.
-3. Add a tiny end-to-end smoke check for the web panel against real runtime outputs.
-4. Decide whether to add OCR/MinerU/Marker as an optional advanced extraction path for table-heavy PDFs.
+1. Tighten the direction template so recommended experiments, risks, and audit steps are more standardized.
+2. Add a tiny end-to-end smoke check for the web panel against real runtime outputs.
+3. Decide whether to add OCR/MinerU/Marker as an optional advanced extraction path for table-heavy PDFs.
 
 ## Useful Commands
 

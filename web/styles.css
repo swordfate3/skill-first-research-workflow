@@ -126,6 +126,17 @@ button.filter-chip.active {
   align-content: start;
 }
 
+.document-group {
+  display: grid;
+  gap: 8px;
+}
+
+.group-title {
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
 .document-item {
   width: 100%;
   border: 1px solid var(--line);

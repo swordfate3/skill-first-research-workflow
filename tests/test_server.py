@@ -97,6 +97,36 @@ class ServerTests(unittest.TestCase):
 
         self.assertEqual([doc["name"] for doc in documents], ["c-direction.md"])
 
+    def test_list_documents_treats_all_filter_as_unfiltered(self):
+        server = load_server_module()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            outputs_root = Path(tmpdir) / "workspace" / "outputs"
+            outputs_root.mkdir(parents=True)
+            write_document(
+                outputs_root / "a-paper-card.md",
+                title="A Paper Card",
+                doc_type="paper_card",
+            )
+            write_document(
+                outputs_root / "b-collision.md",
+                title="B Collision",
+                doc_type="collision",
+            )
+            write_document(
+                outputs_root / "c-direction.md",
+                title="C Direction",
+                doc_type="direction",
+            )
+
+            with patch.object(server, "OUTPUTS_ROOT", outputs_root):
+                documents = server.list_documents(doc_type="all")
+
+        self.assertEqual(
+            [doc["type"] for doc in documents],
+            ["paper_card", "collision", "direction"],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -80,12 +80,13 @@ class ResearchWorkflowHandler(BaseHTTPRequestHandler):
 
 def list_documents(doc_type: str | None = None) -> list[dict]:
     OUTPUTS_ROOT.mkdir(parents=True, exist_ok=True)
+    normalized_filter = None if doc_type in {None, "", "all"} else doc_type
     documents = []
     for path in sorted(OUTPUTS_ROOT.glob("*.md")):
         content = path.read_text(encoding="utf-8", errors="replace")
         metadata, body = split_frontmatter(content)
         document_type = metadata.get("type") or "note"
-        if doc_type and document_type != doc_type:
+        if normalized_filter and document_type != normalized_filter:
             continue
         documents.append(
             {

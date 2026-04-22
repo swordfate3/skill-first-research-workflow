@@ -4,14 +4,15 @@ const emptyEl = document.querySelector("#emptyState");
 const refreshButton = document.querySelector("#refreshButton");
 const stateEl = document.querySelector("#stateSummary");
 const filterButtons = [...document.querySelectorAll("[data-filter]")];
+const documentTypeOrder = ["paper_card", "collision", "direction"];
 
 let activeName = "";
-let activeFilter = "paper_card";
+let activeFilter = "all";
 
 refreshButton.addEventListener("click", refresh);
 for (const button of filterButtons) {
   button.addEventListener("click", () => {
-    const nextFilter = button.dataset.filter || "paper_card";
+    const nextFilter = button.dataset.filter || "all";
     if (nextFilter === activeFilter) {
       return;
     }
@@ -54,21 +55,7 @@ async function loadDocuments() {
     return;
   }
 
-  for (const doc of documents) {
-    const button = globalThis.document.createElement("button");
-    button.className = "document-item";
-    if (doc.name === activeName) {
-      button.classList.add("active");
-    }
-    button.type = "button";
-    button.dataset.name = doc.name;
-    button.innerHTML = `
-      <span class="document-title">${escapeHtml(doc.title)}</span>
-      <span class="document-meta">${escapeHtml(doc.type)} · ${escapeHtml(doc.status)} · ${escapeHtml(doc.name)}</span>
-    `;
-    button.addEventListener("click", () => loadDocument(doc.name));
-    listEl.appendChild(button);
-  }
+  renderDocumentGroups(documents);
 
   if (activeName && documents.some((doc) => doc.name === activeName)) {
     await loadDocument(activeName);
@@ -109,6 +96,56 @@ function updateFilterButtons() {
   for (const button of filterButtons) {
     button.classList.toggle("active", button.dataset.filter === activeFilter);
   }
+}
+
+function renderDocumentGroups(documents) {
+  const groupedDocuments = groupDocumentsByType(documents);
+
+  for (const [type, entries] of groupedDocuments) {
+    const groupEl = globalThis.document.createElement("section");
+    groupEl.className = "document-group";
+
+    const titleEl = globalThis.document.createElement("div");
+    titleEl.className = "group-title";
+    titleEl.textContent = `${type} (${entries.length})`;
+    groupEl.appendChild(titleEl);
+
+    for (const doc of entries) {
+      const button = globalThis.document.createElement("button");
+      button.className = "document-item";
+      if (doc.name === activeName) {
+        button.classList.add("active");
+      }
+      button.type = "button";
+      button.dataset.name = doc.name;
+      button.innerHTML = `
+        <span class="document-title">${escapeHtml(doc.title)}</span>
+        <span class="document-meta">${escapeHtml(doc.type)} · ${escapeHtml(doc.status)} · ${escapeHtml(doc.name)}</span>
+      `;
+      button.addEventListener("click", () => loadDocument(doc.name));
+      groupEl.appendChild(button);
+    }
+
+    listEl.appendChild(groupEl);
+  }
+}
+
+function groupDocumentsByType(documents) {
+  const groups = [];
+
+  for (const type of documentTypeOrder) {
+    const entries = documents.filter((doc) => doc.type === type);
+    if (entries.length) {
+      groups.push([type, entries]);
+    }
+  }
+
+  const otherEntries = documents.filter((doc) => !documentTypeOrder.includes(doc.type));
+  if (otherEntries.length) {
+    groups.push(["other", otherEntries]);
+  }
+
+  return groups;
 }
 
 function renderMarkdown(markdown) {
