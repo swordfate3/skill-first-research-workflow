@@ -6,7 +6,7 @@ Last updated: 2026-04-22
 
 当前 `research-workflow` skill 已经具备完整能力：
 
-- 可通过 `npx skills add swordfate3/skill-first-research-workflow@research-workflow` 安装
+- 可通过 `npx skills add swordfate3/skill-first-research-workflow --skill research-workflow` 安装
 - 可释放项目模板
 - 可运行 `workflow.py prepare`
 - 可启动本地 Web 面板

@@ -15,7 +15,13 @@
 先安装：
 
 ```bash
-npx skills add swordfate3/skill-first-research-workflow@research-workflow
+npx skills add swordfate3/skill-first-research-workflow --skill research-workflow
+```
+
+也支持直接用 GitHub skill 目录链接：
+
+```bash
+npx skills add https://github.com/swordfate3/skill-first-research-workflow/tree/main/skills/research-workflow
 ```
 
 再准备一个工作目录：
@@ -121,7 +127,13 @@ cd ~/my-research
 ### 1. 安装 skill
 
 ```bash
-npx skills add swordfate3/skill-first-research-workflow@research-workflow
+npx skills add swordfate3/skill-first-research-workflow --skill research-workflow
+```
+
+如果你想先确认仓库里有哪些 skill，可先执行：
+
+```bash
+npx skills add swordfate3/skill-first-research-workflow --list
 ```
 
 ### 2. 创建工作目录

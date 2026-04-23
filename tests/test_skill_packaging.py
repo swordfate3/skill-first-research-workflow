@@ -98,6 +98,22 @@ class SkillPackagingTests(unittest.TestCase):
 
         self.assertEqual(result["status"], "needs_destination")
 
+    def test_readme_uses_current_skills_add_format(self):
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+
+        self.assertIn(
+            "npx skills add swordfate3/skill-first-research-workflow --skill research-workflow",
+            readme,
+        )
+        self.assertIn(
+            "https://github.com/swordfate3/skill-first-research-workflow/tree/main/skills/research-workflow",
+            readme,
+        )
+        self.assertNotIn(
+            "npx skills add swordfate3/skill-first-research-workflow@research-workflow",
+            readme,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

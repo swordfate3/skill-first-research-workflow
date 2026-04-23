@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 2026-04-22
+Last updated: 2026-04-23
 
 ## Current Direction
 
@@ -40,7 +40,7 @@ workspace/extracted/<paper-name>/
 - Added `workflow.py prepare` so the skill has one automatic entry point.
 - Simplified `SKILL.md`: user adds papers and invokes the skill; the Agent runs the rest.
 - Added default Chinese output rules with English technical terms preserved.
-- Added a bundled project template and bootstrap script so the skill can be installed with `npx skills add <owner>/<repo>@research-workflow`.
+- Added a bundled project template and bootstrap script so the skill can be installed from GitHub with `npx skills add <owner>/<repo> --skill research-workflow`.
 - Added the first scheme-B workflow upgrade: paper memory JSON, Top-K collision selection, and pending direction generation.
 - Ran the current two real AES papers through the full `memory -> paper card -> collision -> direction` chain.
 - Added runtime paper memory records under `workspace/memory/papers/` and generated the first real direction draft under `workspace/outputs/`.
@@ -55,6 +55,7 @@ workspace/extracted/<paper-name>/
 - Synced the upload-enabled server and front-end into the shipped skill template.
 - Added a dedicated setup design for first-run onboarding: explicit destination selection, `uv` detection, and automatic Web reuse/startup.
 - Implemented a first-run setup helper that requires an explicit destination when the current directory is not initialized, runs `uv sync`, and reuses or starts the local Web panel.
+- Verified GitHub import using the current `skills add` CLI flow: `--list` discovers `research-workflow` and `--skill research-workflow` installs it successfully.
 
 ## Verified
 
